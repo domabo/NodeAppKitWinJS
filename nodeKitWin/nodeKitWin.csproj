@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{3fecc7e4-2ce8-4adb-9f9a-38a6f32ecace}</ProjectGuid>
+    <ProjectGuid>{3FECC7E4-2CE8-4ADB-9F9A-38A6F32ECACE}</ProjectGuid>
     <OutputType>winmdobj</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>nodeKitWin</RootNamespace>
@@ -102,10 +102,89 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
+    <Content Include="js\bindings\async_wrap.js" />
+    <Content Include="js\bindings\buffer.js" />
+    <Content Include="js\bindings\cares_wrap.js" />
+    <Content Include="js\bindings\constants.js" />
+    <Content Include="js\bindings\contextify.js" />
+    <Content Include="js\bindings\crypto.js" />
+    <Content Include="js\bindings\fs.js" />
+    <Content Include="js\bindings\fs_event_wrap.js" />
+    <Content Include="js\bindings\handle_wrap.js" />
+    <Content Include="js\bindings\http_parser.js" />
+    <Content Include="js\bindings\natives.js" />
+    <Content Include="js\bindings\pipe_wrap.js" />
+    <Content Include="js\bindings\process_wrap.js" />
+    <Content Include="js\bindings\signal_wrap.js" />
+    <Content Include="js\bindings\smalloc.js" />
+    <Content Include="js\bindings\spawn_sync.js" />
+    <Content Include="js\bindings\stat_watcher.js" />
+    <Content Include="js\bindings\stream_wrap.js" />
+    <Content Include="js\bindings\tcp_wrap.js" />
+    <Content Include="js\bindings\timer_wrap.js" />
+    <Content Include="js\bindings\tty_wrap.js" />
+    <Content Include="js\bindings\udp_wrap.js" />
+    <Content Include="js\bindings\uv.js" />
+    <Content Include="js\bindings\v8.js" />
+    <Content Include="js\bindings\zlib.js" />
+    <Content Include="js\node.js" />
+    <Content Include="lib\assert.js" />
+    <Content Include="lib\buffer.js" />
+    <Content Include="lib\child_process.js" />
+    <Content Include="lib\cluster.js" />
+    <Content Include="lib\console.js" />
+    <Content Include="lib\constants.js" />
+    <Content Include="lib\crypto.js" />
+    <Content Include="lib\dgram.js" />
+    <Content Include="lib\dns.js" />
+    <Content Include="lib\domain.js" />
+    <Content Include="lib\events.js" />
+    <Content Include="lib\freelist.js" />
+    <Content Include="lib\fs.js" />
+    <Content Include="lib\http.js" />
+    <Content Include="lib\https.js" />
+    <Content Include="lib\module.js" />
+    <Content Include="lib\net.js" />
+    <Content Include="lib\os.js" />
+    <Content Include="lib\path.js" />
+    <Content Include="lib\punycode.js" />
+    <Content Include="lib\querystring.js" />
+    <Content Include="lib\readline.js" />
+    <Content Include="lib\repl.js" />
+    <Content Include="lib\smalloc.js" />
+    <Content Include="lib\stream.js" />
+    <Content Include="lib\string_decoder.js" />
+    <Content Include="lib\sys.js" />
+    <Content Include="lib\timers.js" />
+    <Content Include="lib\tls.js" />
+    <Content Include="lib\tracing.js" />
+    <Content Include="lib\tty.js" />
+    <Content Include="lib\url.js" />
+    <Content Include="lib\util.js" />
+    <Content Include="lib\vm.js" />
+    <Content Include="lib\zlib.js" />
+    <Content Include="lib\_debugger.js" />
+    <Content Include="lib\_http_agent.js" />
+    <Content Include="lib\_http_client.js" />
+    <Content Include="lib\_http_common.js" />
+    <Content Include="lib\_http_incoming.js" />
+    <Content Include="lib\_http_outgoing.js" />
+    <Content Include="lib\_http_server.js" />
+    <Content Include="lib\_linklist.js" />
+    <Content Include="lib\_stream_duplex.js" />
+    <Content Include="lib\_stream_passthrough.js" />
+    <Content Include="lib\_stream_readable.js" />
+    <Content Include="lib\_stream_transform.js" />
+    <Content Include="lib\_stream_writable.js" />
+    <Content Include="lib\_tls_common.js" />
+    <Content Include="lib\_tls_legacy.js" />
+    <Content Include="lib\_tls_wrap.js" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="cs\" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">
     <VisualStudioVersion>12.0</VisualStudioVersion>
@@ -118,5 +197,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-
 </Project>
