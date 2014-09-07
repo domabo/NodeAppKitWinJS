@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>App1</title>
+
+    <!-- WinJS references -->
+    <link href="//Microsoft.WinJS.2.0/css/ui-light.css" rel="stylesheet" />
+    <script src="//Microsoft.WinJS.2.0/js/base.js"></script>
+    <script src="//Microsoft.WinJS.2.0/js/ui.js"></script>
+
+    <!-- App1 references -->
+    <link href="debug.css" rel="stylesheet" />
+  
+    <script src="app.js"></script>
+    <script src="debug.js"></script>
+</head>
+<body>
+<div id="content">    
+    <div id="inputContainer">
+        <input type="url" id="urlField" />
+        <!-- This button is initially a Go button, but changes to a Stop button while the WebView control is navigating. -->
+        <button id="goOrStopButton">Go</button>
+        <!-- This progress indicator is initially hidden. It will be shown while the WebView control is navigating. -->
+        <progress id="progressRing" class="win-ring win-medium" style="visibility: hidden"></progress>
+        <br />
+        <!-- These navigation buttons are initially disabled since this sample does not start with any navigation history. They will be enabled when navigation occurs, according to the WebView control's state. -->
+        <button id="homeButton" >Home</button>
+          <button id="backButton" disabled="disabled">Back</button>
+        <button id="forwardButton" disabled="disabled">Forward</button>
+     
+    </div>
+    <div id="outputContainer">
+        <div id="content_main">
+            <x-ms-webview id="webview"></x-ms-webview>
+        </div>
+        <div id="content_debug">
+            <textarea id="logArea" readonly="readonly"></textarea>
+        </div>
+    </div>
+    </div>
+</body>
+</html>
