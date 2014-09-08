@@ -9,8 +9,8 @@
     <ProjectGuid>{3FECC7E4-2CE8-4ADB-9F9A-38A6F32ECACE}</ProjectGuid>
     <OutputType>winmdobj</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>nodeKitWin</RootNamespace>
-    <AssemblyName>nodeKitWin</AssemblyName>
+    <RootNamespace>nodekit</RootNamespace>
+    <AssemblyName>nodekit</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformVersion>8.1</TargetPlatformVersion>
     <MinimumVisualStudioVersion>12</MinimumVisualStudioVersion>
@@ -128,6 +128,7 @@
     <Content Include="js\bindings\v8.js" />
     <Content Include="js\bindings\zlib.js" />
     <Content Include="js\node.js" />
+    <Content Include="js\nodeappkit.js" />
     <Content Include="lib\assert.js" />
     <Content Include="lib\buffer.js" />
     <Content Include="lib\child_process.js" />
@@ -181,11 +182,10 @@
     <Content Include="lib\_tls_wrap.js" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="cs\native.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="cs\" />
-  </ItemGroup>
+  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">
     <VisualStudioVersion>12.0</VisualStudioVersion>
   </PropertyGroup>

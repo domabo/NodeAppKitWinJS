@@ -22,7 +22,7 @@ function ContextifyScript(script,options) {
   var filename = options.filename || '<eval>';
   var displayErrors = options.displayErrors || false;
 
-  this._script = new io.nodyn.contextify.ContextifyScriptWrap(__nodyn, script, filename, displayErrors);
+  this._script = new io.nodekit.contextify.ContextifyScriptWrap(__nodyn, script, filename, displayErrors);
 }
 
 ContextifyScript.prototype.runInThisContext = function() {

@@ -17,7 +17,7 @@
 var Pipe = process.binding( "pipe_wrap" ).Pipe;
 
 function Process() {
-  this._process = new io.nodyn.process.ProcessWrap( process._process );
+  this._process = new io.nodekit.process.ProcessWrap( process._process );
   this._process.on( 'exit', Process.prototype._onExit.bind(this) );
 }
 

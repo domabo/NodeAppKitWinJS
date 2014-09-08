@@ -21,7 +21,7 @@ var nodyn       = require('nodyn'),
     posix       = process._posix,
     Errno       = Packages.jnr.constants.platform.Errno,
     File        = Packages.java.io.File,
-    Fs          = Packages.io.nodyn.fs.Fs,
+    Fs          = Packages.io.nodekit.fs.Fs,
     binding     = module.exports,
     statsCtor   = null;
 

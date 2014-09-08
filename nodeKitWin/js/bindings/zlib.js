@@ -19,15 +19,15 @@ var util = require('util'),
     blocking = require('nodyn/blocking'),
     EventEmitter = require('events').EventEmitter;
 
-nodyn.exportEnums(module.exports, io.nodyn.zlib.Mode.values());
-nodyn.exportEnums(module.exports, io.nodyn.zlib.Code.values());
-nodyn.exportEnums(module.exports, io.nodyn.zlib.Level.values());
-nodyn.exportEnums(module.exports, io.nodyn.zlib.Strategy.values());
-nodyn.exportEnums(module.exports, io.nodyn.zlib.Flush.values());
+nodyn.exportEnums(module.exports, io.nodekit.zlib.Mode.values());
+nodyn.exportEnums(module.exports, io.nodekit.zlib.Code.values());
+nodyn.exportEnums(module.exports, io.nodekit.zlib.Level.values());
+nodyn.exportEnums(module.exports, io.nodekit.zlib.Strategy.values());
+nodyn.exportEnums(module.exports, io.nodekit.zlib.Flush.values());
 
 function Zlib(mode) {
   if (!(this instanceof Zlib)) return new Zlib(mode);
-  this._delegate = new io.nodyn.zlib.NodeZlib(mode);
+  this._delegate = new io.nodekit.zlib.NodeZlib(mode);
   this._delegate.on('error', this._onError.bind(this));
 }
 util.inherits(Zlib, EventEmitter);

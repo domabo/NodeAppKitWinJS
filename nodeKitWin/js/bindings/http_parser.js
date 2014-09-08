@@ -15,7 +15,7 @@
  */
 
 function HTTPParser() {
-  this._parser = new io.nodyn.http.HTTPParser();
+  this._parser = new io.nodekit.http.HTTPParser();
   this._parser.on( 'headersComplete', HTTPParser.prototype._onHeadersComplete.bind(this) );
   this._parser.on( 'body',            HTTPParser.prototype._onBody.bind(this) );
   this._parser.on( 'messageComplete', HTTPParser.prototype._onMessageComplete.bind(this) );
@@ -94,9 +94,9 @@ HTTPParser.kOnHeadersComplete = 1;
 HTTPParser.kOnBody = 2;
 HTTPParser.kOnMessageComplete = 3;
 
-HTTPParser.REQUEST  = io.nodyn.http.HTTPParser.REQUEST;
-HTTPParser.RESPONSE = io.nodyn.http.HTTPParser.RESPONSE;
+HTTPParser.REQUEST  = io.nodekit.http.HTTPParser.REQUEST;
+HTTPParser.RESPONSE = io.nodekit.http.HTTPParser.RESPONSE;
 
-HTTPParser.methods  = io.nodyn.http.HTTPParser.METHODS;
+HTTPParser.methods  = io.nodekit.http.HTTPParser.METHODS;
 
 module.exports.HTTPParser = HTTPParser;

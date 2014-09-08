@@ -7,7 +7,7 @@ Project("{262852C6-CD72-467D-83FE-5EEB1973A190}") = "nodeAppKitWin", "nodeAppKit
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nodeAppKitWinLib", "nodeAppKitWinLib\nodeAppKitWinLib.csproj", "{AD0E0F99-EDDB-4005-BA04-2406E7D6CD58}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nodeKitWin", "nodeKitWin\nodeKitWin.csproj", "{3FECC7E4-2CE8-4ADB-9F9A-38A6F32ECACE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nodekitWin", "nodeKitWin\nodekitWin.csproj", "{3FECC7E4-2CE8-4ADB-9F9A-38A6F32ECACE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

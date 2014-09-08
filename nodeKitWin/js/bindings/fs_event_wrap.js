@@ -18,7 +18,7 @@ var util = require('util'),
     Handle = process.binding('handle_wrap').Handle;
 
 function FSEvent() {
-  this._wrap = new io.nodyn.fs.FsEventWrap(process._process);
+  this._wrap = new io.nodekit.fs.FsEventWrap(process._process);
   this._wrap.on('change', _callback.bind(this));
   Handle.call( this, this._wrap );
 }
