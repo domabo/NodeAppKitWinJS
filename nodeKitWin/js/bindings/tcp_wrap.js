@@ -41,13 +41,6 @@ TCP.prototype._onConnection = function(result) {
     return new Error("Not Implemented");
 }
 
-// ----------------------------------------
-// Client
-// ----------------------------------------
-
-TCP.prototype._onAfterConnect = function(result) {
-    return new Error("Not Implemented");
-}
 
 // ----------------------------------------
 
@@ -71,8 +64,21 @@ TCP.prototype.listen = function(backlog) {
     return new Error("Not Implemented");
 }
 
-TCP.prototype.connect = function(req, addr, port) {
-    return new Error("Not Implemented");
+TCP.prototype.connect = function (req, addr, port) {
+    var self = this;
+    this._req = req;
+    var clientSocket = new Windows.Networking.Sockets.StreamSocket();
+    var remoteName = new Windows.Networking.HostName(addr);
+    clientSocket.connectAsync(remoteName, port).then(function () {
+        var status = 0;
+        var handle = self;
+        var readable = true;
+        var writable = true;;
+
+        var oncomplete = self._req.oncomplete;
+        delete this._req.oncomplete;
+        oncomplete(status, handle, self._req, readable, writable);
+    });
 }
 
 module.exports.TCP = TCP;

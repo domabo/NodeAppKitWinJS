@@ -45,7 +45,7 @@ var source = {};
 	'constants.js',
 	/* 'crypto.js', ** SEE REPLACEMENT SECTION BELOW ** */
 	'dgram.js',
-	'dns.js',
+	/* 'dns.js', ** SEE REPLACEMENT SECTION BELOW ** */
 	'domain.js',
 	'events.js',
 	'freelist.js',
@@ -78,7 +78,8 @@ var source = {};
 /* CUSTOM NODE.JS API REPLACEMENTS*/
 [
 	'buffer',
-    'crypto'
+    'crypto',
+    'native-dns'
 ].forEach(function (name) {
     source[name] = getSourceReplacement(name);
 });
