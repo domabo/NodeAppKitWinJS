@@ -38,11 +38,10 @@ function maybeCallback(callback, thisArg, func) {
   }
 }
 
+
 function notImplemented() {
   throw new Error('Method not implemented');
 }
-
-
 
 /**
  * Create a new stats object.
@@ -156,6 +155,23 @@ function Binding(system) {
 
 }
 
+/**
+ * Call the provided function and either return the result or call the callback
+ * with it (depending on if a callback is provided).
+ * @param {function()} callback Optional callback.
+ * @param {Object} thisArg This argument for the following function.
+ * @param {function()} func Function to call.
+ * @return {*} Return (if callback is not provided).
+ */
+Binding.prototype.maybeCallbackPromise = function(callback, thisArg, func) {
+    if (callback) {
+        func.call(thisArg).then(function (val) {
+            callback(null, val);
+        }, function (e) { callback(e); });
+    } else {
+        return this._system.toSync(func.call(thisArg));
+    }
+}
 
 /**
  * Get the file system underlying this binding.
@@ -218,20 +234,16 @@ Binding.prototype._untrackDescriptorById = function(fd) {
  * @param {function(Error, Stats)} callback Callback (optional).
  * @return {Stats|undefined} Stats or undefined (if sync).
  */
-Binding.prototype.stat = function(filepath, callback) {
-  return maybeCallback(callback, this, function() {
-    var item = this._system.getItem(filepath);
-    if (item instanceof SymbolicLink) {
-      item = this._system.getItem(
-          path.resolve(path.dirname(filepath), item.getPath()));
-    }
-    if (!item) {
-      throw new FSError('ENOENT', filepath);
-    }
-    return new Stats(item.getStats());
-  });
+Binding.prototype.stat = function (filepath, callback) {
+    return this.maybeCallbackPromise(callback, this, function () {
+        return this._system.getItem(filepath).then(function (item) {
+            if (!item) {
+                throw new FSError('ENOENT', filepath);
+            }
+            return new Stats(item.getStats());
+        });
+    });
 };
-
 
 /**
  * Stat an item.
@@ -239,14 +251,13 @@ Binding.prototype.stat = function(filepath, callback) {
  * @param {function(Error, Stats)} callback Callback (optional).
  * @return {Stats|undefined} Stats or undefined (if sync).
  */
-Binding.prototype.fstat = function(fd, callback) {
-  return maybeCallback(callback, this, function() {
-    var descriptor = this._getDescriptorById(fd);
-    var item = descriptor.getItem();
-    return new Stats(item.getStats());
+Binding.prototype.fstat = function (fd, callback) {
+   return maybeCallback(callback, this, function() {
+      var descriptor = this._getDescriptorById(fd);
+      var item = descriptor.getItem();
+      return new Stats(item.getStats());
   });
 };
-
 
 /**
  * Close a file descriptor.
@@ -269,52 +280,22 @@ Binding.prototype.close = function(fd, callback) {
  * @return {string} File descriptor (if sync).
  */
 Binding.prototype.open = function(pathname, flags, mode, callback) {
-  return maybeCallback(callback, this, function() {
-    var descriptor = new FileDescriptor(flags);
-    var item = this._system.getItem(pathname);
-    if (item instanceof SymbolicLink) {
-      item = this._system.getItem(
-          path.resolve(path.dirname(pathname), item.getPath()));
-    }
-    if (descriptor.isExclusive() && item) {
-      throw new FSError('EEXIST', pathname);
-    }
-    if (descriptor.isCreate() && !item) {
-      var parent = this._system.getItem(path.dirname(pathname));
-      if (!parent) {
-        throw new FSError('ENOENT', pathname);
-      }
-      if (!(parent instanceof Directory)) {
-        throw new FSError('ENOTDIR', pathname);
-      }
-      item = new File();
-      if (mode) {
-        item.setMode(mode);
-      }
-      parent.addItem(path.basename(pathname), item);
-    }
-    if (descriptor.isRead()) {
-      if (!item) {
-        throw new FSError('ENOENT', pathname);
-      }
-      if (!item.canRead()) {
-        throw new FSError('EACCES', pathname);
-      }
-    }
-    if (descriptor.isWrite() && !item.canWrite()) {
-      throw new FSError('EACCES', pathname);
-    }
-    if (descriptor.isTruncate()) {
-      item.setContent('');
-    }
-    if (descriptor.isTruncate() || descriptor.isAppend()) {
-      descriptor.setPosition(item.getContent().length);
-    }
-    descriptor.setItem(item);
-    return this._trackDescriptor(descriptor);
-  });
+    return this.maybeCallbackPromise(callback, this, function () {
+        var descriptor = new FileDescriptor(flags);
+        return this._system.getItem(filepath).then(function (item) {
+            if (descriptor.isRead()) {
+                if (!item) {
+                    throw new FSError('ENOENT', pathname);
+                }
+                if (!item.canRead()) {
+                    throw new FSError('EACCES', pathname);
+                }
+            }
+            descriptor.setItem(item);
+            return this._trackDescriptor(descriptor);
+        });
+    });
 };
-
 
 /**
  * Read from a file descriptor.
@@ -368,33 +349,9 @@ Binding.prototype.read = function(fd, buffer, offset, length, position,
 Binding.prototype.writeBuffer = function(fd, buffer, offset, length, position,
     callback) {
   return maybeCallback(callback, this, function() {
-    var descriptor = this._getDescriptorById(fd);
-    if (!descriptor.isWrite()) {
-      throw new FSError('EBADF');
-    }
-    var file = descriptor.getItem();
-    if (!(file instanceof File)) {
-      // not a regular file
-      throw new FSError('EBADF');
-    }
-    if (typeof position !== 'number' || position < 0) {
-      position = descriptor.getPosition();
-    }
-    var content = file.getContent();
-    var newLength = position + length;
-    if (content.length < newLength) {
-      var newContent = new Buffer(newLength);
-      content.copy(newContent);
-      content = newContent;
-    }
-    var sourceEnd = Math.min(offset + length, buffer.length);
-    var written = buffer.copy(content, position, offset, sourceEnd);
-    file.setContent(content);
-    descriptor.setPosition(newLength);
-    return written;
+      return notImplemented();
   });
 };
-
 
 /**
  * Alias for writeBuffer (used in Node <= 0.10).
@@ -424,14 +381,9 @@ Binding.prototype.write = Binding.prototype.writeBuffer;
  */
 Binding.prototype.writeString = function(fd, string, position, encoding,
     callback) {
-  var buffer = new Buffer(string, encoding);
-  var wrapper;
-  if (callback) {
-    wrapper = function(err, written, returned) {
-      callback(err, written, returned && string);
-    };
-  }
-  return this.writeBuffer(fd, buffer, 0, string.length, position, wrapper);
+    return maybeCallback(callback, this, function () {
+        return notImplemented();
+    });
 };
 
 
@@ -443,44 +395,10 @@ Binding.prototype.writeString = function(fd, string, position, encoding,
  * @return {undefined}
  */
 Binding.prototype.rename = function(oldPath, newPath, callback) {
-  return maybeCallback(callback, this, function() {
-    var oldItem = this._system.getItem(oldPath);
-    if (!oldItem) {
-      throw new FSError('ENOENT', oldPath);
-    }
-    var oldParent = this._system.getItem(path.dirname(oldPath));
-    var oldName = path.basename(oldPath);
-    var newItem = this._system.getItem(newPath);
-    var newParent = this._system.getItem(path.dirname(newPath));
-    var newName = path.basename(newPath);
-    if (newItem) {
-      // make sure they are the same type
-      if (oldItem instanceof File) {
-        if (newItem instanceof Directory) {
-          throw new FSError('EISDIR', newPath);
-        }
-      } else if (oldItem instanceof Directory) {
-        if (!(newItem instanceof Directory)) {
-          throw new FSError('ENOTDIR', newPath);
-        }
-        if (newItem.list().length > 0) {
-          throw new FSError('ENOTEMPTY', newPath);
-        }
-      }
-      newParent.removeItem(newName);
-    } else {
-      if (!newParent) {
-        throw new FSError('ENOENT', newPath);
-      }
-      if (!(newParent instanceof Directory)) {
-        throw new FSError('ENOTDIR', newPath);
-      }
-    }
-    oldParent.removeItem(oldName);
-    newParent.addItem(newName, oldItem);
-  });
+    return maybeCallback(callback, this, function () {
+        return notImplemented();
+    });
 };
-
 
 /**
  * Read a directory.
@@ -490,18 +408,10 @@ Binding.prototype.rename = function(oldPath, newPath, callback) {
  * @return {Array.<string>} Array of items in directory (if sync).
  */
 Binding.prototype.readdir = function(dirpath, callback) {
-  return maybeCallback(callback, this, function() {
-    var dir = this._system.getItem(dirpath);
-    if (!dir) {
-      throw new FSError('ENOENT', dirpath);
-    }
-    if (!(dir instanceof Directory)) {
-      throw new FSError('ENOTDIR', dirpath);
-    }
-    return dir.list();
-  });
+  return this.maybeCallbackPromise(callback, this, function () {
+      return this._system.getDirList(filepath);
+      });
 };
-
 
 /**
  * Create a directory.
@@ -510,21 +420,9 @@ Binding.prototype.readdir = function(dirpath, callback) {
  * @param {function(Error)} callback Optional callback.
  */
 Binding.prototype.mkdir = function(pathname, mode, callback) {
-  maybeCallback(callback, this, function() {
-    var item = this._system.getItem(pathname);
-    if (item) {
-      throw new FSError('EEXIST', pathname);
-    }
-    var parent = this._system.getItem(path.dirname(pathname));
-    if (!parent) {
-      throw new FSError('ENOENT', pathname);
-    }
-    var dir = new Directory();
-    if (mode) {
-      dir.setMode(mode);
-    }
-    parent.addItem(path.basename(pathname), dir);
-  });
+     maybeCallback(callback, this, function () {
+        return notImplemented();
+    });
 };
 
 
@@ -534,20 +432,9 @@ Binding.prototype.mkdir = function(pathname, mode, callback) {
  * @param {function(Error)} callback Optional callback.
  */
 Binding.prototype.rmdir = function(pathname, callback) {
-  maybeCallback(callback, this, function() {
-    var item = this._system.getItem(pathname);
-    if (!item) {
-      throw new FSError('ENOENT', pathname);
-    }
-    if (!(item instanceof Directory)) {
-      throw new FSError('ENOTDIR', pathname);
-    }
-    if (item.list().length > 0) {
-      throw new FSError('ENOTEMPTY', pathname);
-    }
-    var parent = this._system.getItem(path.dirname(pathname));
-    parent.removeItem(path.basename(pathname));
-  });
+     maybeCallback(callback, this, function () {
+        return notImplemented();
+    });
 };
 
 
@@ -558,20 +445,9 @@ Binding.prototype.rmdir = function(pathname, callback) {
  * @param {function(Error)} callback Optional callback.
  */
 Binding.prototype.ftruncate = function(fd, len, callback) {
-  maybeCallback(callback, this, function() {
-    var descriptor = this._getDescriptorById(fd);
-    if (!descriptor.isWrite()) {
-      throw new FSError('EINVAL');
-    }
-    var file = descriptor.getItem();
-    if (!(file instanceof File)) {
-      throw new FSError('EINVAL');
-    }
-    var content = file.getContent();
-    var newContent = new Buffer(len);
-    content.copy(newContent);
-    file.setContent(newContent);
-  });
+     maybeCallback(callback, this, function () {
+        return notImplemented();
+    });
 };
 
 
@@ -592,14 +468,9 @@ Binding.prototype.truncate = Binding.prototype.ftruncate;
  * @param {function(Error)} callback Optional callback.
  */
 Binding.prototype.chown = function(pathname, uid, gid, callback) {
-  maybeCallback(callback, this, function() {
-    var item = this._system.getItem(pathname);
-    if (!item) {
-      throw new FSError('ENOENT', pathname);
-    }
-    item.setUid(uid);
-    item.setGid(gid);
-  });
+    return maybeCallback(callback, this, function () {
+        return notImplemented();
+    });
 };
 
 
@@ -611,12 +482,9 @@ Binding.prototype.chown = function(pathname, uid, gid, callback) {
  * @param {function(Error)} callback Optional callback.
  */
 Binding.prototype.fchown = function(fd, uid, gid, callback) {
-  maybeCallback(callback, this, function() {
-    var descriptor = this._getDescriptorById(fd);
-    var item = descriptor.getItem();
-    item.setUid(uid);
-    item.setGid(gid);
-  });
+    return maybeCallback(callback, this, function () {
+        return notImplemented();
+    });
 };
 
 
@@ -627,13 +495,9 @@ Binding.prototype.fchown = function(fd, uid, gid, callback) {
  * @param {function(Error)} callback Optional callback.
  */
 Binding.prototype.chmod = function(pathname, mode, callback) {
-  maybeCallback(callback, this, function() {
-    var item = this._system.getItem(pathname);
-    if (!item) {
-      throw new FSError('ENOENT', pathname);
-    }
-    item.setMode(mode);
-  });
+     maybeCallback(callback, this, function () {
+        return notImplemented();
+    });
 };
 
 
@@ -644,11 +508,9 @@ Binding.prototype.chmod = function(pathname, mode, callback) {
  * @param {function(Error)} callback Optional callback.
  */
 Binding.prototype.fchmod = function(fd, mode, callback) {
-  maybeCallback(callback, this, function() {
-    var descriptor = this._getDescriptorById(fd);
-    var item = descriptor.getItem();
-    item.setMode(mode);
-  });
+     maybeCallback(callback, this, function () {
+        return notImplemented();
+    });
 };
 
 
@@ -658,17 +520,9 @@ Binding.prototype.fchmod = function(fd, mode, callback) {
  * @param {function(Error)} callback Optional callback.
  */
 Binding.prototype.unlink = function(pathname, callback) {
-  maybeCallback(callback, this, function() {
-    var item = this._system.getItem(pathname);
-    if (!item) {
-      throw new FSError('ENOENT', pathname);
-    }
-    if (item instanceof Directory) {
-      throw new FSError('EPERM', pathname);
-    }
-    var parent = this._system.getItem(path.dirname(pathname));
-    parent.removeItem(path.basename(pathname));
-  });
+     maybeCallback(callback, this, function () {
+        return notImplemented();
+    });
 };
 
 
@@ -680,14 +534,9 @@ Binding.prototype.unlink = function(pathname, callback) {
  * @param {function(Error)} callback Optional callback.
  */
 Binding.prototype.utimes = function(pathname, atime, mtime, callback) {
-  maybeCallback(callback, this, function() {
-    var item = this._system.getItem(pathname);
-    if (!item) {
-      throw new FSError('ENOENT', pathname);
-    }
-    item.setATime(new Date(atime * 1000));
-    item.setMTime(new Date(mtime * 1000));
-  });
+    return maybeCallback(callback, this, function () {
+        return notImplemented();
+    });
 };
 
 
@@ -699,12 +548,9 @@ Binding.prototype.utimes = function(pathname, atime, mtime, callback) {
  * @param {function(Error)} callback Optional callback.
  */
 Binding.prototype.futimes = function(fd, atime, mtime, callback) {
-  maybeCallback(callback, this, function() {
-    var descriptor = this._getDescriptorById(fd);
-    var item = descriptor.getItem();
-    item.setATime(new Date(atime * 1000));
-    item.setMTime(new Date(mtime * 1000));
-  });
+     maybeCallback(callback, this, function () {
+        return notImplemented();
+    });
 };
 
 
@@ -714,9 +560,9 @@ Binding.prototype.futimes = function(fd, atime, mtime, callback) {
  * @param {function(Error)} callback Optional callback.
  */
 Binding.prototype.fsync = function(fd, callback) {
-  maybeCallback(callback, this, function() {
-    this._getDescriptorById(fd);
-  });
+     maybeCallback(callback, this, function () {
+        //ignore
+    });
 };
 
 
@@ -726,9 +572,9 @@ Binding.prototype.fsync = function(fd, callback) {
  * @param {function(Error)} callback Optional callback.
  */
 Binding.prototype.fdatasync = function(fd, callback) {
-  maybeCallback(callback, this, function() {
-    this._getDescriptorById(fd);
-  });
+    maybeCallback(callback, this, function () {
+        //ignore
+    });
 };
 
 
@@ -739,26 +585,9 @@ Binding.prototype.fdatasync = function(fd, callback) {
  * @param {function(Error)} callback Optional callback.
  */
 Binding.prototype.link = function(srcPath, destPath, callback) {
-  maybeCallback(callback, this, function() {
-    var item = this._system.getItem(srcPath);
-    if (!item) {
-      throw new FSError('ENOENT', srcPath);
-    }
-    if (item instanceof Directory) {
-      throw new FSError('EPERM', srcPath);
-    }
-    if (this._system.getItem(destPath)) {
-      throw new FSError('EEXIST', destPath);
-    }
-    var parent = this._system.getItem(path.dirname(destPath));
-    if (!parent) {
-      throw new FSError('ENOENT', destPath);
-    }
-    if (!(parent instanceof Directory)) {
-      throw new FSError('ENOTDIR', destPath);
-    }
-    parent.addItem(path.basename(destPath), item);
-  });
+    maybeCallback(callback, this, function () {
+        return notImplemented();
+    });
 };
 
 
@@ -770,21 +599,9 @@ Binding.prototype.link = function(srcPath, destPath, callback) {
  * @param {function(Error)} callback Optional callback.
  */
 Binding.prototype.symlink = function(srcPath, destPath, type, callback) {
-  maybeCallback(callback, this, function() {
-    if (this._system.getItem(destPath)) {
-      throw new FSError('EEXIST', destPath);
-    }
-    var parent = this._system.getItem(path.dirname(destPath));
-    if (!parent) {
-      throw new FSError('ENOENT', destPath);
-    }
-    if (!(parent instanceof Directory)) {
-      throw new FSError('ENOTDIR', destPath);
-    }
-    var link = new SymbolicLink();
-    link.setPath(srcPath);
-    parent.addItem(path.basename(destPath), link);
-  });
+    maybeCallback(callback, this, function () {
+        return notImplemented();
+    });
 };
 
 
@@ -795,13 +612,9 @@ Binding.prototype.symlink = function(srcPath, destPath, type, callback) {
  * @return {string} Symbolic link contents (path to source).
  */
 Binding.prototype.readlink = function(pathname, callback) {
-  return maybeCallback(callback, this, function() {
-    var link = this._system.getItem(pathname);
-    if (!(link instanceof SymbolicLink)) {
-      throw new FSError('EINVAL', pathname);
-    }
-    return link.getPath();
-  });
+    maybeCallback(callback, this, function () {
+        return notImplemented();
+    });
 };
 
 
@@ -812,12 +625,13 @@ Binding.prototype.readlink = function(pathname, callback) {
  * @return {Stats|undefined} Stats or undefined (if sync).
  */
 Binding.prototype.lstat = function(filepath, callback) {
-  return maybeCallback(callback, this, function() {
-    var item = this._system.getItem(filepath);
-    if (!item) {
-      throw new FSError('ENOENT', filepath);
-    }
-    return new Stats(item.getStats());
+  return this.maybeCallbackPromise(callback, this, function () {
+      return this._system.getItem(filepath).then(function (item) {
+          if (!item) {
+              throw new FSError('ENOENT', filepath);
+          }
+          return new Stats(item.getStats());
+      });
   });
 };
 

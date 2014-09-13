@@ -40,8 +40,8 @@ function FileSystemWinRT() {
 
 }
 
-FileSystemWinRT.prototype.getItemSync = function (filepath) {
-    return io.nodekit.natives.util.toSync(this.getItem(filepath));
+FileSystemWinRT.prototype.toSync = function (promise) {
+    return io.nodekit.natives.util.toSync(promise);
 }
 
 /**
@@ -85,12 +85,49 @@ FileSystemWinRT.prototype.getItem = function (filepath) {
         stat.uid = 0;
         stat.gid = 0;
         if (stat._isFile)
+        {
             stat.size = properties.size;
-       
-        var item = new FileSystemWinRT.file(stat);
-        return item;
+            return new FileSystemWinRT.file(stat);
+        }
+        else
+        {
+            stat.size = properties.size;
+            return new FileSystemWinRT.directory(stat);
+        }
     });
 };
+
+/**
+ * Get directory listing
+ * @param {string} filepath Path to directory.
+ * @return {Promise<[]>} The array of item names (or error if not found or not a directory).
+ */
+FileSystemWinRT.prototype.getDirList = function (filepath) {
+    
+    return _root.TryGetItemAsync(filepath)
+        .then(function (storageItem) {
+        if (item !== null) {
+            if (item.isOfType(Windows.Storage.StorageItemTypes.folder))
+            {
+                return pathFolder.GetFilesAsync();
+            }
+            else    
+            {
+                throw new FSError('ENOTDIR');
+            }
+        }
+        else
+            throw new FSError('ENOENT');
+    })
+     .then(function (PathFiles) {
+         var result = [];
+         pathFiles.forEach(function (file) {
+             result.push(file.Name);
+         });
+         return result;
+     });
+};
+
 
 /**
  * Get a file system item.
