@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest">
-  <Identity Name="a61b0e27-cc1e-4acd-aad0-74a7dc7a3106" Version="1.0.0.0" Publisher="CN=Guy" />
+  <Identity Name="a61b0e27-cc1e-4acd-aad0-74a7dc7a3106" Version="1.0.0.0" Publisher="CN=Domabo" />
   <Properties>
     <DisplayName>nodeAppKitWin</DisplayName>
     <PublisherDisplayName>Guy</PublisherDisplayName>

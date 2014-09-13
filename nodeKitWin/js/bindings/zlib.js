@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Red Hat, Inc.
+ * Copyright 2014 Domabo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,82 +15,51 @@
  */
 
 var util = require('util'),
-    nodyn = require('nodyn'),
-    blocking = require('nodyn/blocking'),
-    EventEmitter = require('events').EventEmitter;
+    EventEmitter = require('events').EventEmitter,
+    zlib_delegate = require('delegates/zlib/binding.js').Zlib
 
-nodyn.exportEnums(module.exports, io.nodekit.zlib.Mode.values());
-nodyn.exportEnums(module.exports, io.nodekit.zlib.Code.values());
-nodyn.exportEnums(module.exports, io.nodekit.zlib.Level.values());
-nodyn.exportEnums(module.exports, io.nodekit.zlib.Strategy.values());
-nodyn.exportEnums(module.exports, io.nodekit.zlib.Flush.values());
+exports.NONE = 0;
+exports.DEFLATE = 1;
+exports.INFLATE = 2;
+exports.GZIP = 3;
+exports.GUNZIP = 4;
+exports.DEFLATERAW = 5;
+exports.INFLATERAW = 6;
+exports.UNZIP = 7;
 
 function Zlib(mode) {
   if (!(this instanceof Zlib)) return new Zlib(mode);
-  this._delegate = new io.nodekit.zlib.NodeZlib(mode);
+  this._delegate = new zlib_delegate(mode);
   this._delegate.on('error', this._onError.bind(this));
 }
+
 util.inherits(Zlib, EventEmitter);
 module.exports.Zlib = Zlib;
 
 Zlib.prototype.init = function(windowBits, level, memLevel, strategy, dictionary) {
-  this._delegate.init(windowBits, level, memLevel, strategy, dictionary);
+    return _delegate.init(windowBits, level, memLevel, strategy, dictionary);
 };
 
 Zlib.prototype.params = function(level, strategy) {
-  this._delegate.params(level, strategy);
+    return _delegate.params(level, strategy);
 };
 
 Zlib.prototype.reset = function() {
-  this._delegate.reset();
+    return _delegate.reset();
 };
 
 Zlib.prototype.close = function() {
-  this._delegate.close();
+    return _delegate.close();
 };
 
 Zlib.prototype.write = function(flushFlag, chunk, inOffset, inLen, outBuffer, outOffset, outLen) {
-  return new ZlibRequest(this._delegate).run(function() {
-    this._delegate.write(flushFlag, chunk._byteArray(), inOffset, inLen, outBuffer._nettyBuffer(), outOffset, outLen);
-  }.bind(this));
+    return _delegate.write(flushFlag, chunk, inOffset, inLen, outBuffer, outOffset, outLen);
 };
 
 Zlib.prototype.writeSync = function(flushFlag, chunk, inOffset, inLen, outBuffer, outOffset, outLen) {
-  this._delegate.writeSync(flushFlag, chunk._byteArray(), inOffset, inLen, outBuffer._nettyBuffer(), outOffset, outLen);
-  // TODO
-  return {
-    AvailInAfter: 0,
-    AvailOutAfter: 0
-  };
+    return _delegate.writeSync(flushFlag, chunk, inOffset, inLen, outBuffer, outOffset, outLen);
 };
 
 Zlib.prototype._onError = function(result) {
-  if (typeof this.onerror === 'function')
     this.onerror(result.error.message, result.result);
-  else
-    console.error("WTF");
-};
-
-function ZlibRequest(delegate) {
-  if (!(this instanceof ZlibRequest)) return new ZlibRequest();
-  delegate.on('after', this._onAfter.bind(this));
-}
-
-ZlibRequest.prototype._onAfter = function _onAfter(result) {
-  if (this.callback) {
-    if (result.error) {
-      throw new Error("Unable to process zlib request", result.error);
-    }
-    var inAfter = 0, outAfter = 1;
-    if (result.result) {
-      inAfter = result.result.inAfter;
-      outAfter = result.result.outAfter;
-    }
-    this.callback(inAfter, outAfter);
-  }
-};
-
-ZlibRequest.prototype.run = function run(f) {
-  blocking.submit(f);
-  return this;
 };

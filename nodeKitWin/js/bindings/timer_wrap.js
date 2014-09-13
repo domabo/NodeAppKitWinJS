@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Red Hat, Inc.
+ * Copyright 2014 Domabo.  Portions Copyright 2014 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,19 +18,19 @@ var util = require('util');
 var Handle = process.binding('handle_wrap').Handle;
 
 function Timer() {
-  this._timer = new io.nodekit.timer.TimerWrap( process._process );
+    this._timer = {};
   Handle.call( this, this._timer );
 }
 util.inherits( Timer, Handle );
 
 Timer.prototype.start = function(msec, repeat) {
-  this._timer.start(msec, repeat);
+    this._timer._timeoutID  = setTimeout(this[0], msec);
 }
 
 Timer.prototype.stop = function() {
-  this._timer.stop();
+    clearTimeout(this._timer._timeoutID);
 }
 
-Timer.now = io.nodekit.timer.TimerWrap.now;
+Timer.now = new Date().getTime();
 
 module.exports.Timer = Timer;

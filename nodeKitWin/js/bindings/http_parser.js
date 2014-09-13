@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Red Hat, Inc.
+ * Copyright 2014 Domabo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,29 +15,36 @@
  */
 
 function HTTPParser() {
-  this._parser = new io.nodekit.http.HTTPParser();
-  this._parser.on( 'headersComplete', HTTPParser.prototype._onHeadersComplete.bind(this) );
-  this._parser.on( 'body',            HTTPParser.prototype._onBody.bind(this) );
-  this._parser.on( 'messageComplete', HTTPParser.prototype._onMessageComplete.bind(this) );
-}
+    this._parser = require('delegates/http_parser/http-parser.js').HTTPParser
+    this._parser.onHeadersComplete = HTTPParser.prototype._onHeadersComplete.bind(this);
+    this._parser.onBody = HTTPParser.prototype._onBody.bind(this);
+    this._parser.OnMessageComplete = HTTPParser.prototype._onMessageComplete.bind(this);
 
-// ----------------------------------------
+    this.kOnHeaders = 0;
+    this.kOnHeadersComplete = 1;
+    this.kOnBody = 2;
+    this.kOnMessageComplete = 3;
+
+    this.REQUEST = 1;
+    this.RESPONSE = 2;
+
+    this.methods = this._parser.methods;
+ }
 
 HTTPParser.prototype._onHeadersComplete = function(result) {
-  this.method          = this._parser.method;
-  this.url             = this._parser.url;
-  this.versionMajor    = this._parser.versionMajor;
-  this.versionMinor    = this._parser.versionMinor;
-  this.shouldKeepAlive = this._parser.shouldKeepAlive;
+  this.method          = result.method;
+  this.url             = result.url;
+  this.versionMajor = result.versionMajor;
+  this.versionMinor = result.versionMinor;
+  this.shouldKeepAlive = null;
 
-  this.statusCode      = this._parser.statusCode;
-  this.statusMessage   = this._parser.statusMessage;
+  this.statusCode      = result.statusCode;
+  this.statusMessage   = result.statusMsg;
 
-  this.upgrade         = this._parser.upgrade;
+  this.upgrade         = result.upgrade;
 
-  // headers
   this.headers = [];
-  var jHeaders = this._parser.headers;
+  var jHeaders = result.headers;
   for ( var i = 0 ; i < jHeaders.length ; ++i ) {
     this.headers.push( jHeaders[i] );
   }
@@ -45,25 +52,14 @@ HTTPParser.prototype._onHeadersComplete = function(result) {
   return this[HTTPParser.kOnHeadersComplete].call(this, this);
 }
 
-HTTPParser.prototype._onBody = function(result) {
-  //var buffer = new Buffer( result.result );
-  var buffer = process.binding('buffer').createBuffer( result.result );
-  return this[HTTPParser.kOnBody].call(this, buffer, 0, buffer.length);
+HTTPParser.prototype._onBody = function(chunk, offset, length) {
+  return this[HTTPParser.kOnBody].call(this, chunk, offset, length);
 }
 
-HTTPParser.prototype._onMessageComplete = function(result) {
-  // trailers
+HTTPParser.prototype._onMessageComplete = function() {
   this._headers = [];
-  var jHeaders = this._parser.trailers;
-  for ( var i = 0 ; i < jHeaders.length ; ++i ) {
-    this._headers.push( jHeaders[i] );
-  }
-
   this[HTTPParser.kOnMessageComplete].call(this);
 }
-
-// ----------------------------------------
-// ----------------------------------------
 
 HTTPParser.prototype.reinitialize = function(state) {
   delete this.method;
@@ -82,21 +78,11 @@ HTTPParser.prototype.reinitialize = function(state) {
 }
 
 HTTPParser.prototype.execute = function(d) {
-  return this._parser.execute( d._nettyBuffer() );
+  return this._parser.execute( d, 0, d.length );
 }
 
 HTTPParser.prototype.finish = function() {
   this._parser.finish();
 }
-
-HTTPParser.kOnHeaders = 0;
-HTTPParser.kOnHeadersComplete = 1;
-HTTPParser.kOnBody = 2;
-HTTPParser.kOnMessageComplete = 3;
-
-HTTPParser.REQUEST  = io.nodekit.http.HTTPParser.REQUEST;
-HTTPParser.RESPONSE = io.nodekit.http.HTTPParser.RESPONSE;
-
-HTTPParser.methods  = io.nodekit.http.HTTPParser.METHODS;
 
 module.exports.HTTPParser = HTTPParser;

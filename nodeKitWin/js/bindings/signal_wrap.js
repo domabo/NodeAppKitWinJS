@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Red Hat, Inc.
+ * Copyright 2014 Domabo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
+console.log("ERROR: signal_wrap not yet implemented");
+
 var util = require('util');
 var Handle = process.binding('handle_wrap').Handle;
 
 function Signal() {
-  this._signal = new io.nodekit.process.SignalWrap( process._process );
+    this._signal = {};
   Handle.call( this, this._signal );
 }
 
 util.inherits( Signal, Handle );
 
 Signal.prototype.start = function(signum) {
-  this._signal.start( signum );
+    return new Error("Not Implemented");
 }
 
 module.exports.Signal = Signal;

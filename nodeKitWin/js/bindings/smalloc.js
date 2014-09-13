@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Red Hat, Inc.
+ * Copyright 2014 Domabo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,21 @@
  * limitations under the License.
  */
 
-module.exports.alloc = function(obj, len, type) {
-  return io.nodekit.smalloc.Smalloc.alloc(obj, len);
+module.exports.alloc = function (obj, len, type) {
+    return obj;
 }
 
 module.exports.truncate = function(obj, len) {
-  return io.nodekit.smalloc.Smalloc.truncate(obj, len);
+    return obj;
 }
 
-module.exports.sliceOnto = function(src, dest, start, end) {
-  return io.nodekit.smalloc.Smalloc.sliceOnto(src, dest, start, end);
+module.exports.sliceOnto = function (src, dest, start, end) {
+
+    for (var i = start; i < end; i++) {
+        dest[i] = src[i];
+    }
+
+    return src;
 }
 
 module.exports.kMaxLength = 64 * 1024;

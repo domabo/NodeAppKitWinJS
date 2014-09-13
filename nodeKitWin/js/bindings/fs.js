@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Red Hat, Inc.
+ * Copyright 2014 Domabo;  Portions Copyright 2014 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ var nodyn       = require('nodyn'),
 // Executes work asynchronously if async is provided and is a function -
 // otherwise, just executes the work and returns the result. If executing
 // async and successful, the callback function is executed on the next tick.
-// If there is an error and the throws param is falsy just returns the
+// If there is an error and the throws param is false just returns the
 // result.err property, otherwise throw it.
 function executeWork(work, async, throws) {
   if (typeof async === 'function') { // Async

@@ -17,9 +17,11 @@
 "use strict";
 
 var getSource = io.nodekit.natives.sources.getNative;
+var getSourceReplacement = io.nodekit.natives.sources.getNativeReplacement;
 
 var source = {};
 
+/* BUILT-IN UNMODIFIED NODE.JS SOURCES */
 [   '_debugger.js',
 	'_http_agent.js',
 	'_http_client.js',
@@ -36,12 +38,12 @@ var source = {};
 	'_tls_legacy.js',
 	'_tls_wrap.js',
 	'assert.js',
-	'buffer.js',
+	/* 'buffer.js', ** SEE REPLACEMENT SECTION BELOW ** */
 	'child_process.js',
 	'cluster.js',
 	'console.js',
 	'constants.js',
-	'crypto.js',
+	/* 'crypto.js', ** SEE REPLACEMENT SECTION BELOW ** */
 	'dgram.js',
 	'dns.js',
 	'domain.js',
@@ -71,6 +73,14 @@ var source = {};
 	'zlib.js'
    ].forEach( function(name) {
   source[name] = getSource(name);
+   });
+
+/* CUSTOM NODE.JS API REPLACEMENTS*/
+[
+	'buffer',
+    'crypto'
+].forEach(function (name) {
+    source[name] = getSourceReplacement(name);
 });
 
 source.config = "{}";

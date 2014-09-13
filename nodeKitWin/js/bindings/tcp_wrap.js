@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Red Hat, Inc.
+ * Copyright 2014 Domabo; Portions Copyright 2014 Red Hat
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,13 @@
 
 "use strict";
 
+console.log("ERROR: tcp_wrap not yet implemented");
+
 var util = require('util');
 var Stream = process.binding('stream_wrap').Stream;
 
 function TCP(tcp) {
-  if ( tcp instanceof io.nodekit.tcp.TCPWrap ) {
     this._tcp = tcp;
-  } else if ( typeof tcp == 'number' ) {
-    this._tcp = new io.nodekit.tcp.TCPWrap( process._process, tcp );
-  } else {
-    this._tcp = new io.nodekit.tcp.TCPWrap( process._process );
-  }
-
-  // Server
-  this._tcp.on( "connection", TCP.prototype._onConnection.bind(this) );
-
-  //Client
-  this._tcp.on( "afterConnect",    TCP.prototype._onAfterConnect.bind(this) );
-
   Stream.call( this, this._tcp );
 }
 
@@ -49,9 +38,7 @@ Object.defineProperty( TCP.prototype, '_fd', {
 // Server
 // ----------------------------------------
 TCP.prototype._onConnection = function(result) {
-  var err;
-  var clientHandle = new TCP( result.result );
-  this.onconnection(err, clientHandle);
+    return new Error("Not Implemented");
 }
 
 // ----------------------------------------
@@ -59,31 +46,17 @@ TCP.prototype._onConnection = function(result) {
 // ----------------------------------------
 
 TCP.prototype._onAfterConnect = function(result) {
-  // TODO don't assume success
-  var status = 0;
-  var handle = this;
-  var readable = true;
-  var writable = true;;
-
-  var oncomplete = this._req.oncomplete;
-  delete this._req.oncomplete;
-  oncomplete( status, handle, this._req, readable, writable );
+    return new Error("Not Implemented");
 }
 
 // ----------------------------------------
 
 TCP.prototype.getpeername = function(out) {
-  var remote = this._tcp.remoteAddress;
-  out.address = remote.address.hostAddress;
-  out.port    = remote.port;
-  out.family  = ( remote.address instanceof java.net.Inet6Address ? 'IPv6' : 'IPv4' );
+    return new Error("Not Implemented");
 }
 
 TCP.prototype.getsockname = function(out) {
-  var local = this._tcp.localAddress;
-  out.address = local.address.hostAddress;
-  out.port    = local.port;
-  out.family  = ( local.address instanceof java.net.Inet6Address ? 'IPv6' : 'IPv4' );
+    return new Error("Not Implemented");
 }
 
 TCP.prototype.bind6 = function(addr,port) {
@@ -91,16 +64,15 @@ TCP.prototype.bind6 = function(addr,port) {
 }
 
 TCP.prototype.bind = function(addr, port) {
-  this._tcp.bind( addr, port );
+    return new Error("Not Implemented");
 }
 
 TCP.prototype.listen = function(backlog) {
-  this._tcp.listen(backlog);
+    return new Error("Not Implemented");
 }
 
 TCP.prototype.connect = function(req, addr, port) {
-  this._req = req;
-  this._tcp.connect(addr,port);
+    return new Error("Not Implemented");
 }
 
 module.exports.TCP = TCP;

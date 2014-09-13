@@ -50,6 +50,7 @@
     <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
     <DefaultLanguage>en-US</DefaultLanguage>
     <PackageCertificateKeyFile>nodeAppKitWin_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateThumbprint>D6639A2CE97D34D4EB339170D0BABDD9452F3B33</PackageCertificateThumbprint>
   </PropertyGroup>
   <ItemGroup>
     <AppxManifest Include="package.appxmanifest">

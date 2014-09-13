@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Red Hat, Inc.
+ * Copyright 2014 Domabo.  Portions Copyright 2014 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,18 +33,15 @@ function guessHandleType(fd) {
 function isTTY(fd) {
   return guessHandleType(fd) == 'TTY';
 }
-// ----------------------------------------
 
-function TTY(fd,readable) {
-  this._stream = new io.nodekit.tty.TTYWrap(process._process, fd, readable);
-  Stream.call( this, this._stream );
+function TTY(fd, readable) {
 }
 
 util.inherits(TTY,Stream);
 
 TTY.prototype.getWindowSize = function(out) {
-  out[0] = this._stream.getColumns();
-  out[1] = this._stream.getRows();
+    out[0] = 80;
+    out[1] = 25;
 }
 
 TTY.prototype.setRawMode = function(rawMode) {

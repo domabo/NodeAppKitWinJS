@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Red Hat, Inc.
+ * Copyright 2014 Domabo; Portions Copyright 2014 Red Hat
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,28 +14,26 @@
  * limitations under the License.
  */
 
+console.log("ERROR: stat_watcher not yet implemented");
+
 var util = require('util'),
     Handle = process.binding('handle_wrap').Handle;
 
 function StatWatcher() {
   if (!(this instanceof StatWatcher)) return new StatWatcher();
-  this._delegate = new io.nodekit.fs.NodeStatWatcher(process._process);
+  this._delegate = "TO DO: REGISTER DELEGATE";
   this._delegate.on('change', _onchange.bind(this));
   Handle.call( this, this._delegate );
 }
 util.inherits( StatWatcher, Handle );
 
-StatWatcher.prototype.start = function(path, persistent, interval) {
-  path = require('path').resolve(path);
-  this._stat = fs.statSync(path);
-  this._delegate.start(path, persistent, interval);
+StatWatcher.prototype.start = function (path, persistent, interval) {
+    this._stat = "start";
+    return new Error("Not Implemented");
 };
 
 StatWatcher.prototype.stop = function() {
-  this._delegate.stop();
-  if (typeof this.onstop === 'function') {
-    this.onstop();
-  }
+    return new Error("Not Implemented");
 };
 
 function _onchange(result) {
@@ -43,12 +41,10 @@ function _onchange(result) {
     if (result.error) {
       return;
     }
-    var stat = fs.statSync(result.result);
+    var stat = "new"
     this.onchange(stat, this._stat, -1);
     this._stat = stat;
   }
 }
 
 module.exports.StatWatcher = StatWatcher;
-
-

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Red Hat, Inc.
+ * Copyright 2014 Domabo.  Portions copyright Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ Stream.prototype.writeAsciiString = function(req,data) {
 };
 
 Stream.prototype.writeBuffer = function(req,data) {
-  this._stream.write( data._nettyBuffer() );
+  this._stream.write( data );
   req.oncomplete(0, this, req );
 };
 

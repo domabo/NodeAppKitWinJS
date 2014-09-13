@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Red Hat, Inc.
+ * Copyright 2014 Domabo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,33 +14,31 @@
  * limitations under the License.
  */
 
+console.log("ERROR: spawn not yet implemented");
+
 function spawn(options) {
-  var proc = new io.nodekit.process.SyncProcessWrap( process._process );
-  var status = proc.spawn( options.files, options.args );
   var result = {
-    pid: proc.pid,
+    pid: null,
     output: [
       undefined,
-      process.binding('buffer').createBuffer( proc.stdout ),
-      process.binding('buffer').createBuffer( proc.stderr ),
+      null,
+      null,
     ],
-    //stdout: process.binding('buffer').createBuffer( proc.stdout ),
-    //stderr: process.binding('buffer').createBuffer( proc.stderr ),
-    status: status,
+    status: null,
     signal: undefined,
     error: undefined,
   };
 
   Object.defineProperty( result, 'stdout', {
     get: function() {
-      return this.output[1];
+        return new Error("Not Implemented");
     },
     enumerable: true,
   });
 
   Object.defineProperty( result, 'stderr', {
     get: function() {
-      return this.output[2];
+        return new Error("Not Implemented");
     },
     enumerable: true,
   });

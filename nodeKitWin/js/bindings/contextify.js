@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Red Hat, Inc.
+ * Copyright 2014 Domabo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,32 +22,37 @@ function ContextifyScript(script,options) {
   var filename = options.filename || '<eval>';
   var displayErrors = options.displayErrors || false;
 
-  this._script = new io.nodekit.contextify.ContextifyScriptWrap(__nodyn, script, filename, displayErrors);
+    try {
+        this._script = document.createElement('script');
+        this._script.type = 'text/javascript';
+        this._script.appendChild(document.createTextNode(script));
+       
+    } catch (e) {
+        if (displayErrors)
+            console.log(e.message + " - " + filename);
+    }
 }
 
 ContextifyScript.prototype.runInThisContext = function() {
-  return this.runInContext( __nodyn.globalObject );
+    document.head.appendChild(this._script);
 }
 
 ContextifyScript.prototype.runInContext = function(context) {
-  return this._script.runInContext( context );
+    document.head.appendChild(this._script);
 }
 
-function isContext(obj) {
-  return (obj instanceof org.dynjs.runtime.GlobalObject );
+ContextifyScript.prototype.runInNewContext = function() {
+    document.head.appendChild(this._script);
 }
 
-function makeContext(obj) {
-  var runtime = new org.dynjs.runtime.DynJS(__nodyn.config);
-  var g = runtime.globalObject;
+module.exports.isContext = function isContext(ctx) {
+  return (global.obj = ctx);
+}
 
-  for ( var k in obj ) {
-    g[k] = obj[k];
-  }
-
-  return g;
+module.exports.makeContext = function makeContext(ctx) {
+    global.obj = new {};
+    global.obj._hiddenContextify = ctx;
+    return global.obj;
 }
 
 module.exports.ContextifyScript = ContextifyScript;
-module.exports.isContext        = isContext;
-module.exports.makeContext      = makeContext;

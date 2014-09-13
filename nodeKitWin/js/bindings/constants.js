@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Red Hat, Inc.
+ * Copyright 2014 Domabo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,71 +14,182 @@
  * limitations under the License.
  */
 
-var nodyn = require('nodyn'),
-    FileStat = Packages.jnr.posix.FileStat,
-    ConstantSet = Packages.jnr.constants.ConstantSet;
-
-module.exports.S_IFIFO = FileStat.S_IFIFO;  // named pipe (fifo)
-module.exports.S_IFCHR = FileStat.S_IFCHR;  // character special
-module.exports.S_IFDIR = FileStat.S_IFDIR;  // directory
-module.exports.S_IFBLK = FileStat.S_IFBLK;  // block special
-module.exports.S_IFREG = FileStat.S_IFREG;  // regular
-module.exports.S_IFLNK = FileStat.S_IFLNK;  // symbolic link
-module.exports.S_IFSOCK = FileStat.S_IFSOCK; // socket
-module.exports.S_IFMT = FileStat.S_IFMT;   // file mask for type checks
-module.exports.S_ISUID = FileStat.S_ISUID;  // set user id on execution
-module.exports.S_ISGID = FileStat.S_ISGID;  // set group id on execution
-module.exports.S_ISVTX = FileStat.S_ISVTX;  // save swapped text even after use
-module.exports.S_IRUSR = FileStat.S_IRUSR;  // read permission, owner
-module.exports.S_IWUSR = FileStat.S_IWUSR;  // write permission, owner
-module.exports.S_IXUSR = FileStat.S_IXUSR;  // execute/search permission, owner
-module.exports.S_IRGRP = FileStat.S_IRGRP;  // read permission, group
-module.exports.S_IWGRP = FileStat.S_IWGRP;  // write permission, group
-module.exports.S_IXGRP = FileStat.S_IXGRP;  // execute/search permission, group
-module.exports.S_IROTH = FileStat.S_IROTH;  // read permission, other
-module.exports.S_IWOTH = FileStat.S_IWOTH;  // write permission, other
-module.exports.S_IXOTH = FileStat.S_IXOTH;  // execute permission, other
-
-module.exports.SIGHUP       =  1;
-module.exports.SIGINT       =  2;
-module.exports.SIGQUIT      =  3;
-module.exports.SIGILL       =  4;
-module.exports.SIGTRAP      =  5;
-module.exports.SIGABRT      =  6;
-module.exports.SIGEMT       =  7;
-module.exports.SIGFPE       =  8;
-module.exports.SIGKILL      =  9;
-module.exports.SIGBUS       = 10;
-module.exports.SIGSEGV      = 11;
-module.exports.SIGSYS       = 12;
-module.exports.SIGPIPE      = 13;
-module.exports.SIGALRM      = 14;
-module.exports.SIGTERM      = 15;
-module.exports.SIGURG       = 16;
-module.exports.SIGSTOP      = 17;
-module.exports.SIGTSTP      = 18;
-module.exports.SIGCONT      = 19;
-module.exports.SIGCHLD      = 20;
-module.exports.SIGTTIN      = 21;
-module.exports.SIGTTOU      = 22;
-module.exports.SIGIO        = 23;
-module.exports.SIGXCPU      = 24;
-module.exports.SIGXFSZ      = 25;
-module.exports.SIGVTALRM    = 26;
-module.exports.SIGPROF      = 27;
-module.exports.SIGWINCH     = 28;
-module.exports.SIGINFO      = 29;
-module.exports.SIGUSR1      = 30;
-module.exports.SIGUSR2      = 31;
-
-jnrConstants('OpenFlags');
-jnrConstants('Errno');
-
-function jnrConstants(name) {
-  var constants = ConstantSet.getConstantSet(name);
-  var iter = constants.iterator();
-  while (iter.hasNext()) {
-    var e = iter.next();
-    module.exports[e.name()] = constants.getValue(e.name());
-  }
+module.exports = 
+{
+    "O_RDONLY": 0,
+    "O_WRONLY": 1,
+    "O_RDWR": 2,
+    "S_IFMT": 61440,
+    "S_IFREG": 32768,
+    "S_IFDIR": 16384,
+    "S_IFCHR": 8192,
+    "S_IFBLK": 24576,
+    "S_IFIFO": 4096,
+    "S_IFLNK": 40960,
+    "S_IFSOCK": 49152,
+    "O_CREAT": 512,
+    "O_EXCL": 2048,
+    "O_NOCTTY": 131072,
+    "O_TRUNC": 1024,
+    "O_APPEND": 8,
+    "O_DIRECTORY": 1048576,
+    "O_NOFOLLOW": 256,
+    "O_SYNC": 128,
+    "O_SYMLINK": 2097152,
+    "S_IRWXU": 448,
+    "S_IRUSR": 256,
+    "S_IWUSR": 128,
+    "S_IXUSR": 64,
+    "S_IRWXG": 56,
+    "S_IRGRP": 32,
+    "S_IWGRP": 16,
+    "S_IXGRP": 8,
+    "S_IRWXO": 7,
+    "S_IROTH": 4,
+    "S_IWOTH": 2,
+    "S_IXOTH": 1,
+    "E2BIG": 7,
+    "EACCES": 13,
+    "EADDRINUSE": 48,
+    "EADDRNOTAVAIL": 49,
+    "EAFNOSUPPORT": 47,
+    "EAGAIN": 35,
+    "EALREADY": 37,
+    "EBADF": 9,
+    "EBADMSG": 94,
+    "EBUSY": 16,
+    "ECANCELED": 89,
+    "ECHILD": 10,
+    "ECONNABORTED": 53,
+    "ECONNREFUSED": 61,
+    "ECONNRESET": 54,
+    "EDEADLK": 11,
+    "EDESTADDRREQ": 39,
+    "EDOM": 33,
+    "EDQUOT": 69,
+    "EEXIST": 17,
+    "EFAULT": 14,
+    "EFBIG": 27,
+    "EHOSTUNREACH": 65,
+    "EIDRM": 90,
+    "EILSEQ": 92,
+    "EINPROGRESS": 36,
+    "EINTR": 4,
+    "EINVAL": 22,
+    "EIO": 5,
+    "EISCONN": 56,
+    "EISDIR": 21,
+    "ELOOP": 62,
+    "EMFILE": 24,
+    "EMLINK": 31,
+    "EMSGSIZE": 40,
+    "EMULTIHOP": 95,
+    "ENAMETOOLONG": 63,
+    "ENETDOWN": 50,
+    "ENETRESET": 52,
+    "ENETUNREACH": 51,
+    "ENFILE": 23,
+    "ENOBUFS": 55,
+    "ENODATA": 96,
+    "ENODEV": 19,
+    "ENOENT": 2,
+    "ENOEXEC": 8,
+    "ENOLCK": 77,
+    "ENOLINK": 97,
+    "ENOMEM": 12,
+    "ENOMSG": 91,
+    "ENOPROTOOPT": 42,
+    "ENOSPC": 28,
+    "ENOSR": 98,
+    "ENOSTR": 99,
+    "ENOSYS": 78,
+    "ENOTCONN": 57,
+    "ENOTDIR": 20,
+    "ENOTEMPTY": 66,
+    "ENOTSOCK": 38,
+    "ENOTSUP": 45,
+    "ENOTTY": 25,
+    "ENXIO": 6,
+    "EOPNOTSUPP": 102,
+    "EOVERFLOW": 84,
+    "EPERM": 1,
+    "EPIPE": 32,
+    "EPROTO": 100,
+    "EPROTONOSUPPORT": 43,
+    "EPROTOTYPE": 41,
+    "ERANGE": 34,
+    "EROFS": 30,
+    "ESPIPE": 29,
+    "ESRCH": 3,
+    "ESTALE": 70,
+    "ETIME": 101,
+    "ETIMEDOUT": 60,
+    "ETXTBSY": 26,
+    "EWOULDBLOCK": 35,
+    "EXDEV": 18,
+    "SIGHUP": 1,
+    "SIGINT": 2,
+    "SIGQUIT": 3,
+    "SIGILL": 4,
+    "SIGTRAP": 5,
+    "SIGABRT": 6,
+    "SIGIOT": 6,
+    "SIGBUS": 10,
+    "SIGFPE": 8,
+    "SIGKILL": 9,
+    "SIGUSR1": 30,
+    "SIGSEGV": 11,
+    "SIGUSR2": 31,
+    "SIGPIPE": 13,
+    "SIGALRM": 14,
+    "SIGTERM": 15,
+    "SIGCHLD": 20,
+    "SIGCONT": 19,
+    "SIGSTOP": 17,
+    "SIGTSTP": 18,
+    "SIGTTIN": 21,
+    "SIGTTOU": 22,
+    "SIGURG": 16,
+    "SIGXCPU": 24,
+    "SIGXFSZ": 25,
+    "SIGVTALRM": 26,
+    "SIGPROF": 27,
+    "SIGWINCH": 28,
+    "SIGIO": 23,
+    "SIGSYS": 12,
+    "SSL_OP_ALL": 2147486719,
+    "SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION": 262144,
+    "SSL_OP_CIPHER_SERVER_PREFERENCE": 4194304,
+    "SSL_OP_CISCO_ANYCONNECT": 32768,
+    "SSL_OP_COOKIE_EXCHANGE": 8192,
+    "SSL_OP_CRYPTOPRO_TLSEXT_BUG": 2147483648,
+    "SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS": 2048,
+    "SSL_OP_EPHEMERAL_RSA": 2097152,
+    "SSL_OP_LEGACY_SERVER_CONNECT": 4,
+    "SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER": 32,
+    "SSL_OP_MICROSOFT_SESS_ID_BUG": 1,
+    "SSL_OP_MSIE_SSLV2_RSA_PADDING": 64,
+    "SSL_OP_NETSCAPE_CA_DN_BUG": 536870912,
+    "SSL_OP_NETSCAPE_CHALLENGE_BUG": 2,
+    "SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG": 1073741824,
+    "SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG": 8,
+    "SSL_OP_NO_COMPRESSION": 131072,
+    "SSL_OP_NO_QUERY_MTU": 4096,
+    "SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION": 65536,
+    "SSL_OP_NO_SSLv2": 16777216,
+    "SSL_OP_NO_SSLv3": 33554432,
+    "SSL_OP_NO_TICKET": 16384,
+    "SSL_OP_NO_TLSv1": 67108864,
+    "SSL_OP_NO_TLSv1_1": 268435456,
+    "SSL_OP_NO_TLSv1_2": 134217728,
+    "SSL_OP_PKCS1_CHECK_1": 0,
+    "SSL_OP_PKCS1_CHECK_2": 0,
+    "SSL_OP_SINGLE_DH_USE": 1048576,
+    "SSL_OP_SINGLE_ECDH_USE": 524288,
+    "SSL_OP_SSLEAY_080_CLIENT_DH_BUG": 128,
+    "SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG": 16,
+    "SSL_OP_TLS_BLOCK_PADDING_BUG": 512,
+    "SSL_OP_TLS_D5_BUG": 256,
+    "SSL_OP_TLS_ROLLBACK_BUG": 8388608,
+    "NPN_ENABLED": 1
 }
