@@ -16,7 +16,7 @@
 
 "use strict";
 
-console.log("ERROR: cares_wrap not yet implemented");
+console.log("ERROR: cares_wrap implemented for net.js only (cares.isIP)");
 
 var util = require('util');
 
