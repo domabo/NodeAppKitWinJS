@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Domabo;  Portions Copyright 2014 Red Hat, Inc.
+ * Copyright 2014 Domabo;  
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,326 +14,289 @@
  * limitations under the License.
  */
 
-var util        = require('util'),
-    StatWatcher = process.binding('stat_watcher').StatWatcher,
-    statsCtor   = null;
-
-// Executes work asynchronously if async is provided and is a function -
-// otherwise, just executes the work and returns the result. If executing
-// async and successful, the callback function is executed on the next tick.
-// If there is an error and the throws param is false just returns the
-// result.err property, otherwise throw it.
-function executeWork(work, async, throws) {
-  if (typeof async === 'function') { // Async
-    blocking.submit(function() {
-      var result = work();
-      result = result || {};
-      blocking.unblock(async)( result.err, result.result );
-    });
-  } else { // Sync
-    var result = work();
-    result = result || {};
-    if (result.err) {
-      if (throws) throw result.err;
-      else return result.err;
-    }
-    return result.result;
-  }
-}
+var fs_delegate = require('./delegates/filesystem/binding.js');
+var statsCtor;
 
 module.exports.FSInitialize = function (stats) {
   // fs.js uses this in "native" node.js to inform the C++ in
   // node_file.cc what JS function is used to construct an fs.Stat
-  // object. For now, we'll just construct ours in JS and see how it goes.
+  // object.  We construct ours in JS so largely don't need this.
   statsCtor = stats;
 };
 
-function buildStat(path, statf) {
-  var err, stats,
-      delegate = posix.allocateStat(),
-      result = statf(delegate);
+/**
+ * Not yet implemented.
+ * @type {function()}
+ */
+module.exports.StatWatcher = fs_delegate.StatWatcher;
 
-  if (result !== -1) {
-    stats = new statsCtor(
-      delegate.dev(),
-      delegate.mode(),
-      delegate.nlink(),
-      delegate.uid(),
-      delegate.gid(),
-      delegate.rdev(),
-      delegate.blockSize(),
-      delegate.ino(),
-      delegate.st_size(),
-      delegate.blocks(),
-      delegate.atime(),
-      delegate.mtime(),
-      delegate.ctime(),
-      delegate.ctime() // TODO: I don't know what birthtim_msec should be
-    );
-  } else err = posixError(path, 'stat');
-  return {err:err, result:stats};
-}
-
-module.exports.StatWatcher = StatWatcher;
-
+/**
+ * Stat an item.
+ * @param {string} filepath Path.
+ * @param {function(Error, Stats)} callback Callback (optional).
+ * @return {Stats|undefined} Stats or undefined (if sync).
+ */
 module.exports.stat = function (path, callback) {
-  function work() {
-    return buildStat(path, function(stat) { return posix.stat(path, stat); });
-  }
-  return executeWork(work.bind(this), callback, true);
+    return fs_delegate.stat(path, callback);
 };
 
+/**
+ * Stat an item.
+ * @param {string} filepath Path.
+ * @param {function(Error, Stats)} callback Callback (optional).
+ * @return {Stats|undefined} Stats or undefined (if sync).
+ */
 module.exports.lstat = function (path, callback) {
-  function work() {
-    return buildStat(path, function(stat) { return posix.lstat(path, stat); });
-  }
-  return executeWork(work.bind(this), callback, true);
+    return fs_delegate.lstat(path, callback);
 };
 
-/// <summary>
-/// Asynchronous fstat(2). The callback gets two arguments (err, stats) where stats is a fs.Stats object. fstat() is identical to stat(), except that the file to be stat-ed is specified by the file descriptor JsNumber fd. 
-/// </summary>
-/// <param name="fd"></param>
-/// <returns></returns>
+/**
+ * Stat an item.
+ * @param {number} fd File descriptor.
+ * @param {function(Error, Stats)} callback Callback (optional).
+ * @return {Stats|undefined} Stats or undefined (if sync).
+ */
 module.exports.fstat = function (fd, callback) {
-  function work() {
-    return buildStat(fd, function(stat) { return posix.fstat(fd, stat); });
-  }
-  return executeWork(work.bind(this), callback, true);
+    return fs_delegate.fstat(fd, callback);
 };
 
-/*
-Asynchronous file open. See open(2). flags can be:
-
-'r' - Open file for reading. An exception occurs if the file does not exist.
-'r+' - Open file for reading and writing. An exception occurs if the file does not exist.
-'rs' - Open file for reading in synchronous mode. Instructs the operating system to bypass the local file system cache.
-This is primarily useful for opening files on NFS mounts as it allows you to skip the potentially stale local cache. It has a very real impact on I/O performance so don't use this flag unless you need it.
-
-Note that this doesn't turn fs.open() into a synchronous blocking call. If that's what you want then you should be using fs.openSync()
-
-'rs+' - Open file for reading and writing, telling the OS to open it synchronously. See notes for 'rs' about using this with caution.
-'w' - Open file for writing. The file is created (if it does not exist) or truncated (if it exists).
-'wx' - Like 'w' but fails if path exists.
-'w+' - Open file for reading and writing. The file is created (if it does not exist) or truncated (if it exists).
-'wx+' - Like 'w+' but fails if path exists.
-'a' - Open file for appending. The file is created if it does not exist.
-'ax' - Like 'a' but fails if path exists.
-'a+' - Open file for reading and appending. The file is created if it does not exist.
-'ax+' - Like 'a+' but fails if path exists.
-mode sets the file mode (permission and sticky bits), but only if the file was created. It defaults to 0666, readable and writeable.
-
-The callback gets two arguments (err, fd).
-
-The exclusive flag 'x' (O_EXCL flag in open(2)) ensures that path is newly created. On POSIX systems, path is considered to exist even if it is a symlink to a non-existent file. The exclusive flag may or may not work with network file systems.
-
-On Linux, positional writes don't work when the file is opened in append mode. The kernel ignores the position argument and always appends the data to the end of the file.
-*/
+/**
+ * Open and possibly create a file.
+ * @param {string} pathname File path.
+ * @param {number} flags Flags.
+ * @param {number} mode Mode.
+ * @param {function(Error, string)} callback Callback (optional).
+ * @return {string} File descriptor (if sync).
+ */
 module.exports.open = function (path, flags, mode, callback) {
-  function work() {
-    var fd = posix.open(path, flags, mode), err;
-    if (fd === -1) err = posixError(path, 'open');
-    return {err:err, result:fd};
-  }
-  return executeWork(work.bind(this), callback, true);
+    return fs_delegate.open(path, flags, mode, callback);
 };
 
+/**
+ * Close a file descriptor.
+ * @param {number} fd File descriptor.
+ * @param {function(Error)} callback Callback (optional).
+ */
 module.exports.close = function (fd, callback) {
-  function work() {
-    if (fd === null || fd === undefined) {
-      return {err: new Error("Don't know how to close null")};
-    }
-    var success = posix.close(fd), err;
-    if (success === -1) err = posixError(null, 'close');
-    return {err:err, result:undefined};
-  }
-  return executeWork(work.bind(this), callback);
+     fs_delegate.close(fd, callback)
 };
 
+/**
+ * Write to a file descriptor given a buffer.
+ * @param {string} fd File descriptor.
+ * @param {Buffer} buffer Buffer with contents to write.
+ * @param {number} offset Offset in the buffer to start writing from.
+ * @param {number} length Number of bytes to write.
+ * @param {?number} position Where to begin writing in the file.  If null,
+ *     data will be written to the current file position.
+ * @param {function(Error, number, Buffer)} callback Callback (optional) called
+ *     with any error, number of bytes written, and the buffer.
+ * @return {number} Number of bytes written (if sync).
+ */
 module.exports.writeBuffer = function (fd, buffer, offset, length, position, callback) {
-  function work() {
-    // TODO: Error checking
-    // e.g. https://github.com/joyent/node/blob/master/src/node_file.cc#L788-L795
-    var toWrite = buffer.slice(offset, offset+length);
-        var bytes   = toWrite._byteArray();
-        var written = posix.write(fd, bytes, length), err;
-
-    if (written === -1) err = posixError(path, 'write');
-    return {err: err, result: written};
-  }
-  return executeWork(work.bind(this), callback);
+    return fs_delegate.writeBuffer(fd, buffer, offset, length, position, callback)
 };
 
+/**
+ * Write to a file descriptor given a string.
+ * @param {string} fd File descriptor.
+ * @param {string} string String with contents to write.
+ * @param {number} position Where to begin writing in the file.  If null,
+ *     data will be written to the current file position.
+ * @param {string} encoding String encoding.
+ * @param {function(Error, number, string)} callback Callback (optional) called
+ *     with any error, number of bytes written, and the string.
+ * @return {number} Number of bytes written (if sync).
+ */
 module.exports.writeString = function (fd, str, position, enc, callback) {
-  // TODO: Is this kosher?
-  var buf = new Buffer(str, enc);
-  return binding.writeBuffer(fd, buf, 0, buf.length, position, callback);
+    return fs_delegate.writeString(fd, str, position, enc, callback)
 };
 
+/**
+ * Create a directory.
+ * @param {string} pathname Path to new directory.
+ * @param {number} mode Permissions.
+ * @param {function(Error)} callback Optional callback.
+ */
 module.exports.mkdir = function (path, mode, callback) {
-  function work() {
-    var success = posix.mkdir(path, mode), err;
-    if (success === -1) err = posixError(path, 'mkdir');
-    return {err: err, result: success};
-  }
-  return executeWork(work.bind(this), callback);
+    fs_delegate.mkdir(path, mode, callback)
 };
 
+/**
+ * Remove a directory.
+ * @param {string} pathname Path to directory.
+ * @param {function(Error)} callback Optional callback.
+ */
 module.exports.rmdir = function (path, callback) {
-  function work() {
-    var success = posix.rmdir(path), err;
-    if (success === -1) err = posixError(path, 'rmdir');
-    return {err: err, result: success};
-  }
-  return executeWork(work.bind(this), callback);
+    fs_delegate.rmdir(path, callback)
 };
 
+/**
+ * Rename a file.
+ * @param {string} oldPath Old pathname.
+ * @param {string} newPath New pathname.
+ * @param {function(Error)} callback Callback (optional).
+ * @return {undefined}
+ */
 module.exports.rename = function (from, to, callback) {
-  function work() {
-    var fromFile = new File(from),
-        toFile = new File(to), err;
-    if (!fromFile.exists() || !fromFile.renameTo(toFile)) err = posixError(from, 'rename');
-    return {err:err};
-  }
-  return executeWork(work.bind(this), callback);
+    return fs_delegate.rename(from, to, callback)
 };
 
+/**
+ * Truncate a file.
+ * @param {number} fd File descriptor.
+ * @param {number} len Number of bytes.
+ * @param {function(Error)} callback Optional callback.
+ */
 module.exports.ftruncate = function (fd, len, callback) {
-  function work() {
-    var result = posix.ftruncate(fd, len), err;
-    if (result === -1) {
-      err = posixError(null, 'ftruncate');
-    }
-    return {err:err, result:result};
-  }
-  return executeWork(work.bind(this), callback);
+    fs_delegate.ftruncate(fd, len, callback)
 };
 
-//Reads the contents of a directory. The callback gets two arguments (err, files) where files is an array of the names of the files in the directory excluding '.' and '..'.
+/**
+ * Read a directory.
+ * @param {string} dirpath Path to directory.
+ * @param {function(Error, Array.<string>)} callback Callback (optional) called
+ *     with any error or array of items in the directory.
+ * @return {Array.<string>} Array of items in directory (if sync).
+ */
 module.exports.readdir = function (path, callback) {
-  function work() {
-    var dir = new File( path ), err, files;
-    if (!dir.isDirectory()) err = posixError(path, 'readdir');
-    else files = dir.list();
-    return {err:err, result:nodyn.arrayConverter(files)};
-  }
-  return executeWork(work.bind(this), callback);
+    return fs_delegate.readdir(path, callback)
 };
 
-
-// Read data from the file specified by fd.
-// buffer is the buffer that the data will be written to.
-// offset is the offset in the buffer to start writing at.
-// length is an integer specifying the number of bytes to read.
-// position is an integer specifying where to begin reading from in the file. 
-// If position is null, data will be read from the current file position.
-// The callback is given the three arguments, (err, bytesRead, buffer).
+/**
+ * Read from a file descriptor.
+ * @param {string} fd File descriptor.
+ * @param {Buffer} buffer Buffer that the contents will be written to.
+ * @param {number} offset Offset in the buffer to start writing to.
+ * @param {number} length Number of bytes to read.
+ * @param {?number} position Where to begin reading in the file.  If null,
+ *     data will be read from the current file position.
+ * @param {function(Error, number, Buffer)} callback Callback (optional) called
+ *     with any error, number of bytes read, and the buffer.
+ * @return {number} Number of bytes read 
+ */
 module.exports.read = function (fd, buffer, offset, length, position, callback) {
-  var bytes;
-  offset = offset || 0;
-  // we can't use the executeWork function here because the read() callback
-  // takes 3 parameters, and executeWork only works with cb(err, result)
-  if (typeof callback === 'function') { // Async
-    blocking.submit(function() {
-      if ( position && position !== -1 ) {
-        bytes = Fs.pread(posix, fd, buffer._nettyBuffer(), offset, length, position);
-      } else {
-        bytes = Fs.read(posix, fd, buffer._nettyBuffer(), offset, length);
-      }
-      blocking.unblock(function() {
-        callback(undefined, bytes, buffer);
-      })();
-    }.bind(this));
-  } else { // Sync
-    if ( position && position !== -1 ) {
-      bytes = Fs.pread(posix, fd, buffer._nettyBuffer(), offset, length, position);
-    } else {
-      bytes = Fs.read(posix, fd, buffer._nettyBuffer(), offset, length);
-    }
-    if (bytes === -1) throw posixError(fd, 'read');
-    return bytes;
-  }
+    return fs_delegate.read(fd, buffer, offset, length, position, callback)
 };
 
-//make a new name for a file
+/**
+ * Create a hard link.
+ * @param {string} srcPath The existing file.
+ * @param {string} destPath The new link to create.
+ * @param {function(Error)} callback Optional callback.
+ */
 module.exports.link = function (srcpath, dstpath, callback) {
-    return executeWork(function () {
-        return new Error("Not Implemented");
-    }.bind(this), callback);
+     fs_delegate.link(srcpath, dstpath, callback)
 };
 
-//make a new name for a file
+/**
+ * Create a symbolic link.
+ * @param {string} srcPath Path from link to the source file.
+ * @param {string} destPath Path for the generated link.
+ * @param {string} type Ignored (used for Windows only).
+ * @param {function(Error)} callback Optional callback.
+ */
 module.exports.symlink = function (srcpath, dstpath, type, callback) {
-    return executeWork(function () {
-        return new Error("Not Implemented");
-    }.bind(this), callback);
+     fs_delegate.symlink(srcpath, dstpath, type, callback)
 };
 
-// read value of a symbolic link
+/**
+ * Read the contents of a symbolic link.
+ * @param {string} pathname Path to symbolic link.
+ * @param {function(Error, string)} callback Optional callback.
+ * @return {string} Symbolic link contents (path to source).
+ */
 module.exports.readlink = function (path, callback) {
-    return executeWork(function () {
-        return new Error("Not Implemented");
-    }.bind(this), callback);
+    return fs_delegate.readlink(path, callback)
 };
 
-// delete a name and possibly the file it refers to
+/**
+ * Delete a named item.
+ * @param {string} pathname Path to item.
+ * @param {function(Error)} callback Optional callback.
+ */
 module.exports.unlink = function (path, callback) {
-    return executeWork(function () {
-        return new Error("Not Implemented");
-    }.bind(this), callback);
+     fs_delegate.unlink(path, callback)
 };
 
+/**
+ * Change permissions.
+ * @param {string} pathname Path.
+ * @param {number} mode Mode.
+ * @param {function(Error)} callback Optional callback.
+ */
 module.exports.chmod = function (path, mode, callback) {
-    return executeWork(function () {
-        return new Error("Not Implemented");
-    }.bind(this), callback);
+     fs_delegate.chmod(path, mode, callback)
 };
 
-//change permissions of a file
+/**
+ * Change permissions.
+ * @param {number} fd File descriptor.
+ * @param {number} mode Mode.
+ * @param {function(Error)} callback Optional callback.
+ */
 module.exports.fchmod = function (fd, mode, callback) {
-    return executeWork(function () {
-        return new Error("Not Implemented");
-    }.bind(this), callback);
+     fs_delegate.fchmod(fd, mode, callback)
 };
 
-//change ownership of a file
+/**
+ * Change user and group owner.
+ * @param {string} pathname Path.
+ * @param {number} uid User id.
+ * @param {number} gid Group id.
+ * @param {function(Error)} callback Optional callback.
+ */
 module.exports.chown = function (path, uid, gid, callback) {
-    return executeWork(function () {
-        return new Error("Not Implemented");
-    }.bind(this), callback);
+     fs_delegate.chown(path, uid, gid, callback)
 };
 
-//change ownership of a file
+/**
+ * Change user and group owner.
+ * @param {number} fd File descriptor.
+ * @param {number} uid User id.
+ * @param {number} gid Group id.
+ * @param {function(Error)} callback Optional callback.
+ */
 module.exports.fchown = function (fd, uid, gid, callback) {
-  return executeWork(function() {
-      return new Error("Not Implemented");
-  }.bind(this), callback);
+     fs_delegate.fchown(fd, uid, gid, callback)
 };
 
-//Change file timestamps of the file referenced by the supplied path.
+/**
+ * Update timestamps.
+ * @param {string} pathname Path to item.
+ * @param {number} atime Access time (in seconds).
+ * @param {number} mtime Modification time (in seconds).
+ * @param {function(Error)} callback Optional callback.
+ */
 module.exports.utimes = function (path, atime, mtime, callback) {
-  return executeWork(function() {
-      return new Error("Not Implemented");
-  }.bind(this), callback);
+     fs_delegate.utimes(path, atime, mtime, callback)
 };
 
-//Change the file timestamps of a file referenced by the supplied file descriptor.
+/**
+ * Update timestamps.
+ * @param {number} fd File descriptor.
+ * @param {number} atime Access time (in seconds).
+ * @param {number} mtime Modification time (in seconds).
+ * @param {function(Error)} callback Optional callback.
+ */
 module.exports.futimes = function (fd, atime, mtime, callback) {
-  return executeWork(function() {
-      return new Error("Not Implemented");
-  }.bind(this), callback);
+     fs_delegate.futimes(fd, atime, mtime, callback)
 };
 
-//synchronize a file's in-core state with storage device
+/**
+ * Synchronize in-core state with storage device.
+ * @param {number} fd File descriptor.
+ * @param {function(Error)} callback Optional callback.
+ */
 module.exports.fsync = function (fd) {
-  return executeWork(function() {
-      return new Error("Not Implemented");
-  });
+    return fs_delegate.fsync(fd)
 };
 
-//synchronize a file's in-core state with storage device
+/**
+ * Synchronize in-core metadata state with storage device.
+ * @param {number} fd File descriptor.
+ * @param {function(Error)} callback Optional callback.
+ */
 module.exports.fdatasync = function (fd) {
-   return executeWork(function() {
-      return new Error("Not Implemented");
-  });
+     fs_delegate.fdatasync(fd)
 };

@@ -1,4 +1,27 @@
-var path = require('path');
+/*
+ * Copyright 2014 Domabo; Portions Copyright 2014 Tim Schaub
+ *
+ * Licensed under the the MIT license (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy 
+ * of this software and associated documentation files (the “Software”), to deal 
+ * in the Software without restriction, including without limitation the rights 
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+ * copies of the Software, and to permit persons to whom the Software is 
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR 
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR 
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
 
 var File = require('./file');
 var FileDescriptor = require('./descriptor');
@@ -247,6 +270,24 @@ Binding.prototype.stat = function (filepath, callback) {
 
 /**
  * Stat an item.
+ * @param {string} filepath Path.
+ * @param {function(Error, Stats)} callback Callback (optional).
+ * @return {Stats|undefined} Stats or undefined (if sync).
+ */
+Binding.prototype.lstat = function (filepath, callback) {
+    return this.maybeCallbackPromise(callback, this, function () {
+        return this._system.getItem(filepath).then(function (item) {
+            if (!item) {
+                throw new FSError('ENOENT', filepath);
+            }
+            return new Stats(item.getStats());
+        });
+    });
+};
+
+
+/**
+ * Stat an item.
  * @param {number} fd File descriptor.
  * @param {function(Error, Stats)} callback Callback (optional).
  * @return {Stats|undefined} Stats or undefined (if sync).
@@ -260,18 +301,6 @@ Binding.prototype.fstat = function (fd, callback) {
 };
 
 /**
- * Close a file descriptor.
- * @param {number} fd File descriptor.
- * @param {function(Error)} callback Callback (optional).
- */
-Binding.prototype.close = function(fd, callback) {
-  maybeCallback(callback, this, function() {
-    this._untrackDescriptorById(fd);
-  });
-};
-
-
-/**
  * Open and possibly create a file.
  * @param {string} pathname File path.
  * @param {number} flags Flags.
@@ -279,7 +308,7 @@ Binding.prototype.close = function(fd, callback) {
  * @param {function(Error, string)} callback Callback (optional).
  * @return {string} File descriptor (if sync).
  */
-Binding.prototype.open = function(pathname, flags, mode, callback) {
+Binding.prototype.open = function (pathname, flags, mode, callback) {
     return this.maybeCallbackPromise(callback, this, function () {
         var descriptor = new FileDescriptor(flags);
         return this._system.getItem(filepath).then(function (item) {
@@ -298,6 +327,19 @@ Binding.prototype.open = function(pathname, flags, mode, callback) {
 };
 
 /**
+ * Close a file descriptor.
+ * @param {number} fd File descriptor.
+ * @param {function(Error)} callback Callback (optional).
+ */
+Binding.prototype.close = function(fd, callback) {
+  maybeCallback(callback, this, function() {
+    this._untrackDescriptorById(fd);
+  });
+};
+
+
+
+/**
  * Read from a file descriptor.
  * @param {string} fd File descriptor.
  * @param {Buffer} buffer Buffer that the contents will be written to.
@@ -307,22 +349,47 @@ Binding.prototype.open = function(pathname, flags, mode, callback) {
  *     data will be read from the current file position.
  * @param {function(Error, number, Buffer)} callback Callback (optional) called
  *     with any error, number of bytes read, and the buffer.
- * @return {number} Number of bytes read (if sync).
+ * @return {number} Number of bytes read 
  */
-Binding.prototype.read = function(fd, buffer, offset, length, position,
-    callback) {
-  return maybeCallback(callback, this, function() {
+Binding.prototype.read = function(fd, buffer, offset, length, position, callback) {
     var descriptor = this._getDescriptorById(fd);
     if (!descriptor.isRead()) {
       throw new FSError('EBADF');
     }
     var file = descriptor.getItem();
+   
     if (!(file instanceof File)) {
       // deleted or not a regular file
       throw new FSError('EBADF');
     }
+
+    if (!(file.getIsLoaded()))
+        return this.maybeCallbackPromise(callback, this, function () {
+            this._system.loadContent(file).then(function (file) {
+                return this._getBytes(file, buffer, offset, length, position);
+            });
+        });
+    else
+        return maybeCallback(callback, this, function () {
+            return this._getBytes(file, buffer, offset, length, position);
+        });
+};
+
+
+
+/**
+ * Get content bytes from a file (internal use only).
+ * @param {file} file to read content from.
+ * @param {Buffer} buffer Buffer that the contents will be written to.
+ * @param {number} offset Offset in the buffer to start writing to.
+ * @param {number} length Number of bytes to read.
+ * @param {?number} position Where to begin reading in the file.  If null,
+ *     data will be read from the current file position.
+ * @return {number} Number of bytes read (if sync).
+ */
+Binding.prototype._getBytes = function (file, buffer, offset, length, position) {
     if (typeof position !== 'number' || position < 0) {
-      position = descriptor.getPosition();
+        position = descriptor.getPosition();
     }
     var content = file.getContent();
     var start = Math.min(position, content.length);
@@ -330,9 +397,23 @@ Binding.prototype.read = function(fd, buffer, offset, length, position,
     var read = (start < end) ? content.copy(buffer, offset, start, end) : 0;
     descriptor.setPosition(position + read);
     return read;
-  });
+}
+
+
+/**
+ * Read a directory.
+ * @param {string} dirpath Path to directory.
+ * @param {function(Error, Array.<string>)} callback Callback (optional) called
+ *     with any error or array of items in the directory.
+ * @return {Array.<string>} Array of items in directory (if sync).
+ */
+Binding.prototype.readdir = function (dirpath, callback) {
+    return this.maybeCallbackPromise(callback, this, function () {
+        return this._system.getDirList(filepath);
+    });
 };
 
+// ************************************************************************
 
 /**
  * Write to a file descriptor given a buffer.
@@ -400,18 +481,6 @@ Binding.prototype.rename = function(oldPath, newPath, callback) {
     });
 };
 
-/**
- * Read a directory.
- * @param {string} dirpath Path to directory.
- * @param {function(Error, Array.<string>)} callback Callback (optional) called
- *     with any error or array of items in the directory.
- * @return {Array.<string>} Array of items in directory (if sync).
- */
-Binding.prototype.readdir = function(dirpath, callback) {
-  return this.maybeCallbackPromise(callback, this, function () {
-      return this._system.getDirList(filepath);
-      });
-};
 
 /**
  * Create a directory.
@@ -618,22 +687,6 @@ Binding.prototype.readlink = function(pathname, callback) {
 };
 
 
-/**
- * Stat an item.
- * @param {string} filepath Path.
- * @param {function(Error, Stats)} callback Callback (optional).
- * @return {Stats|undefined} Stats or undefined (if sync).
- */
-Binding.prototype.lstat = function(filepath, callback) {
-  return this.maybeCallbackPromise(callback, this, function () {
-      return this._system.getItem(filepath).then(function (item) {
-          if (!item) {
-              throw new FSError('ENOENT', filepath);
-          }
-          return new Stats(item.getStats());
-      });
-  });
-};
 
 
 /**

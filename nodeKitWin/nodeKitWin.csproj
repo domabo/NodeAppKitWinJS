@@ -106,8 +106,14 @@
     <Content Include="js\bindings\cares_wrap.js" />
     <Content Include="js\bindings\constants.js" />
     <Content Include="js\bindings\contextify.js" />
-    <Content Include="js\bindings\delegates\filesystem\filesystem.js" />
-    <Content Include="js\bindings\delegates\fs\fs.js" />
+    <Content Include="js\bindings\delegates\filesystem\binding.js" />
+    <Content Include="js\bindings\delegates\filesystem\descriptor.js" />
+    <Content Include="js\bindings\delegates\filesystem\directory.js" />
+    <Content Include="js\bindings\delegates\filesystem\error.js" />
+    <Content Include="js\bindings\delegates\filesystem\file.js" />
+    <Content Include="js\bindings\delegates\filesystem\filesystemWinRT.js" />
+    <Content Include="js\bindings\delegates\filesystem\item.js" />
+    <Content Include="js\bindings\delegates\filesystem\symlink.js" />
     <Content Include="js\bindings\delegates\http_parser\http-parser.js" />
     <Content Include="js\builtin-replacements\buffer\bundle.js" />
     <Content Include="js\builtin-replacements\buffer\index.js" />
@@ -154,7 +160,6 @@
     <Content Include="js\builtin-replacements\buffer\test\user-agent.js" />
     <Content Include="js\builtin-replacements\buffer\test\utf16.js" />
     <Content Include="js\bindings\fs.js" />
-    <Content Include="js\bindings\fs_event_wrap.js" />
     <Content Include="js\bindings\handle_wrap.js" />
     <Content Include="js\bindings\http_parser.js" />
     <Content Include="js\bindings\natives.js" />
@@ -163,7 +168,6 @@
     <Content Include="js\bindings\signal_wrap.js" />
     <Content Include="js\bindings\smalloc.js" />
     <Content Include="js\bindings\spawn_sync.js" />
-    <Content Include="js\bindings\stat_watcher.js" />
     <Content Include="js\bindings\stream_wrap.js" />
     <Content Include="js\bindings\tcp_wrap.js" />
     <Content Include="js\bindings\timer_wrap.js" />

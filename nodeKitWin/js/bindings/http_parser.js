@@ -15,7 +15,7 @@
  */
 
 function HTTPParser() {
-    this._parser = require('delegates/http_parser/http-parser.js').HTTPParser
+    this._parser = require('./delegates/http_parser/http-parser.js').HTTPParser;
     this._parser.onHeadersComplete = HTTPParser.prototype._onHeadersComplete.bind(this);
     this._parser.onBody = HTTPParser.prototype._onBody.bind(this);
     this._parser.OnMessageComplete = HTTPParser.prototype._onMessageComplete.bind(this);

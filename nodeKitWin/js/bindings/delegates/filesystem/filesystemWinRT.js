@@ -1,28 +1,32 @@
-var os = require('os');
-var path = require('path');
+/*
+ * Copyright 2014 Domabo; Portions Copyright 2014 Tim Schaub
+ *
+ * Licensed under the the MIT license (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy 
+ * of this software and associated documentation files (the “Software”), to deal 
+ * in the Software without restriction, including without limitation the rights 
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+ * copies of the Software, and to permit persons to whom the Software is 
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR 
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR 
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
 
 var Directory = require('./directory');
 var File = require('./file');
 var FSError = require('./error');
 var SymbolicLink = require('./symlink');
-
-var isWindows = process.platform === 'win32';
-
-function getPathParts(filepath) {
-  var parts = path._makeLong(path.resolve(filepath)).split(path.sep);
-  parts.shift();
-  if (isWindows) {
-    // parts currently looks like ['', '?', 'c:', ...]
-    parts.shift();
-    var q = parts.shift(); // should be '?'
-    var base = '\\\\' + q + '\\' + parts.shift().toLowerCase();
-    parts.unshift(base);
-  }
-  if (parts[parts.length - 1] === '') {
-    parts.pop();
-  }
-  return parts;
-}
 
 /**
  * Create a new file system for WinRT bridge
@@ -52,18 +56,20 @@ FileSystemWinRT.prototype.toSync = function (promise) {
 FileSystemWinRT.prototype.getItem = function (filepath) {
 
     var stat = {};
+    var item;
 
     return _root.GetFolderAsync(System.IO.Path.GetDirectoryName(filepath))
         .then(function (pathFolder) {
             return pathFolder.TryGetItemAsync(System.IO.Path.GetFileName(filepath));
         })
     .then(function (storageItem) {
-        if (item !== null) {
+        if (storageItem !== null) {
+            item = storageItem;
             stat.birthtime = storageItem.DateCreated;
             if (item.isOfType(Windows.Storage.StorageItemTypes.folder)
             {
                 stat.size = 0;
-                stat.mode = 0777;
+                stat.mode = 438; // 0777;
                 stat._isFolder = true;
                 stat._isFile = false;
             }
@@ -79,7 +85,7 @@ FileSystemWinRT.prototype.getItem = function (filepath) {
             throw new FSError('ENOENT');
     })
     .then(function (properties) {
-        stat.mtime = properties.DateModified;
+         stat.mtime = properties.DateModified;
         stat.atime = stat.mtime;
         stat.ctime = stat.mtime;
         stat.uid = 0;
@@ -87,15 +93,35 @@ FileSystemWinRT.prototype.getItem = function (filepath) {
         if (stat._isFile)
         {
             stat.size = properties.size;
-            return new FileSystemWinRT.file(stat);
+            var file = new FileSystemWinRT.file(stat);
+            file._storageItem = item;
+            return file;
         }
         else
         {
             stat.size = properties.size;
-            return new FileSystemWinRT.directory(stat);
+            var dir = new FileSystemWinRT.directory(stat);
+            dir._storageItem = item;
+            return dir;
         }
     });
 };
+
+
+
+/**
+ * Load Content
+ * @param {file} file
+ * @return {Promise<Item>} The item (or null if not found).
+ */
+FileSystemWinRT.prototype.loadContent = function (file) {
+
+    return Windows.Storage.FileIO.readBufferAsync(file)
+        .then(function(buffer){
+            file.setContent(buffer);
+            return file;
+        });
+}
 
 /**
  * Get directory listing
