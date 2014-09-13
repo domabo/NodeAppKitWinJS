@@ -106,6 +106,7 @@
     <Content Include="js\bindings\cares_wrap.js" />
     <Content Include="js\bindings\constants.js" />
     <Content Include="js\bindings\contextify.js" />
+    <Content Include="js\bindings\delegates\filesystem\filesystem.js" />
     <Content Include="js\bindings\delegates\fs\fs.js" />
     <Content Include="js\bindings\delegates\http_parser\http-parser.js" />
     <Content Include="js\builtin-replacements\buffer\bundle.js" />
@@ -317,6 +318,7 @@
     <Content Include="lib\_tls_wrap.js" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="cs\filesystem.cs" />
     <Compile Include="cs\native.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -563,8 +565,11 @@
     <None Include="js\builtin-replacements\crypto\node_modules\sha.js\test\prepare\vectors\byte0195.dat" />
     <None Include="js\builtin-replacements\crypto\package.json" />
     <None Include="js\builtin-replacements\crypto\readme.markdown" />
+    <Content Include="js\readme.md" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="js\winrt\" />
+  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">
     <VisualStudioVersion>12.0</VisualStudioVersion>
   </PropertyGroup>
