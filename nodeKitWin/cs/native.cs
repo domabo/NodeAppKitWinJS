@@ -7,6 +7,7 @@ using System.Diagnostics;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.ApplicationModel.Resources;
+using Windows.Foundation;
 
 namespace io.nodekit.natives
 {
@@ -15,6 +16,16 @@ namespace io.nodekit.natives
         public static void log(string text)
         {
             Debug.WriteLine(text);
+        }
+    }
+
+    public sealed class util
+    {
+        public static Object toSync(IAsyncOperation<Object> promise)
+        {
+            var d = promise.AsTask<Object>().ConfigureAwait(false);
+            Object content = d.GetAwaiter().GetResult();
+            return content;
         }
     }
 

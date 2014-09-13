@@ -40,21 +40,9 @@ function FileSystemWinRT() {
 
 }
 
-/**
- * Get a file system item.
- * @param {string} filepath Path to item.
- * @return {Promise<Item>} The item (or null if not found).
- */
-FileSystemWinRT.prototype.getItem = function (filepath) {
-
-    return this.getItemFile(filepath)
-        .then(function (result) {
-            return result;
-        },
-        function (e) {
-            return this.getItemDirectory(filepath)
-        })
-};
+FileSystemWinRT.prototype.getItemSync = function (filepath) {
+    return io.nodekit.natives.util.toSync(this.getItem(filepath));
+}
 
 /**
  * Get a file system item.

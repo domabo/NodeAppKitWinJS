@@ -9,8 +9,8 @@
     <ProjectGuid>{3FECC7E4-2CE8-4ADB-9F9A-38A6F32ECACE}</ProjectGuid>
     <OutputType>winmdobj</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>nodekit</RootNamespace>
-    <AssemblyName>nodekit</AssemblyName>
+    <RootNamespace>io.nodekit</RootNamespace>
+    <AssemblyName>io.nodekit</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformVersion>8.1</TargetPlatformVersion>
     <MinimumVisualStudioVersion>12</MinimumVisualStudioVersion>
@@ -318,7 +318,6 @@
     <Content Include="lib\_tls_wrap.js" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="cs\filesystem.cs" />
     <Compile Include="cs\native.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
