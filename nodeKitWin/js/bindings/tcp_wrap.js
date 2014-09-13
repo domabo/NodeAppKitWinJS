@@ -73,12 +73,44 @@ TCP.prototype.connect = function (req, addr, port) {
         var status = 0;
         var handle = self;
         var readable = true;
-        var writable = true;;
+        var writable = true;
+        self._writer = new Windows.Storage.Streams.DataWriter(socketsSample.clientSocket.outputStream);
+        self._writer.unicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.utf8;
+        self._writer.byteOrder = Windows.Storage.Streams.ByteOrder.littleEndian;
+        self._reader = new Windows.Storage.Streams.DataReader(streamSocket.inputStream);
+        self._reader.inputStreamOptions = 1;
 
         var oncomplete = self._req.oncomplete;
         delete this._req.oncomplete;
         oncomplete(status, handle, self._req, readable, writable);
     });
 }
+
+TCP.prototype.readStart = function () {
+    this._stream.readStart();
+};
+
+TCP.prototype.readStop = function () {
+    this._stream.readStop();
+};
+
+TCP.prototype.writeUtf8String = function (req, data) {
+    this._writer.writeString(data);
+    req.oncomplete(0, this, req );
+};
+
+TCP.prototype.writeAsciiString = function (req, data) {
+    this._writer.writeString(data);
+    req.oncomplete(0, this, req);
+};
+
+TCP.prototype.writeBuffer = function (req, data) {
+    this._writer.writeBytes(data);
+    req.oncomplete(0, this, req);
+};
+
+TCP.prototype.shutdown = function (req) {
+    this._writer.close();
+};
 
 module.exports.TCP = TCP;
