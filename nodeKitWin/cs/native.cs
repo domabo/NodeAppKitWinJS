@@ -16,6 +16,7 @@ namespace io.nodekit.natives
         public static void log(string text)
         {
             Debug.WriteLine(text);
+         
         }
     }
 

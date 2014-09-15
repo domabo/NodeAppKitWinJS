@@ -102,7 +102,6 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
-    <Content Include="js\bindings\async_wrap.js" />
     <Content Include="js\bindings\cares_wrap.js" />
     <Content Include="js\bindings\constants.js" />
     <Content Include="js\bindings\contextify.js" />

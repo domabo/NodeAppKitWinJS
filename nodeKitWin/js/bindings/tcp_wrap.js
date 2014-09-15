@@ -16,14 +16,11 @@
 
 "use strict";
 
-console.log("ERROR: tcp_wrap not yet implemented");
-
 var util = require('util');
-var Stream = process.binding('stream_wrap').Stream;
 
-function TCP(tcp) {
-    this._tcp = tcp;
-  Stream.call( this, this._tcp );
+function TCP() {
+    Stream.call(this);
+    this._clientSocket = null;
 }
 
 util.inherits(TCP, Stream);
@@ -34,13 +31,19 @@ Object.defineProperty( TCP.prototype, '_fd', {
   }
 })
 
+TCP.prototype.close = function (callback) {
+    if (this._clientSocket)
+        this._clientSocket.close();
+
+    TCP.super_.prototype.close.call(this, callback);
+};
+
 // ----------------------------------------
 // Server
 // ----------------------------------------
 TCP.prototype._onConnection = function(result) {
     return new Error("Not Implemented");
 }
-
 
 // ----------------------------------------
 
@@ -67,18 +70,14 @@ TCP.prototype.listen = function(backlog) {
 TCP.prototype.connect = function (req, addr, port) {
     var self = this;
     this._req = req;
-    var clientSocket = new Windows.Networking.Sockets.StreamSocket();
-    var remoteName = new Windows.Networking.HostName(addr);
-    clientSocket.connectAsync(remoteName, port).then(function () {
+    this._clientSocket = new Windows.Networking.Sockets.StreamSocket();
+    clientSocket.connectAsync(new Windows.Networking.HostName(addr), port).then(function () {
         var status = 0;
         var handle = self;
         var readable = true;
         var writable = true;
-        self._writer = new Windows.Storage.Streams.DataWriter(socketsSample.clientSocket.outputStream);
-        self._writer.unicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.utf8;
-        self._writer.byteOrder = Windows.Storage.Streams.ByteOrder.littleEndian;
-        self._reader = new Windows.Storage.Streams.DataReader(streamSocket.inputStream);
-        self._reader.inputStreamOptions = 1;
+
+        self.setStreams(self._clientSocket.inputStream, self._clientSocket.outputStream);
 
         var oncomplete = self._req.oncomplete;
         delete this._req.oncomplete;
@@ -86,31 +85,16 @@ TCP.prototype.connect = function (req, addr, port) {
     });
 }
 
-TCP.prototype.readStart = function () {
-    this._stream.readStart();
+TCP.prototype.setNoDelay = function (enable) {
+    this._clientSocket.control.noDelay = enable;
 };
 
-TCP.prototype.readStop = function () {
-    this._stream.readStop();
-};
-
-TCP.prototype.writeUtf8String = function (req, data) {
-    this._writer.writeString(data);
-    req.oncomplete(0, this, req );
-};
-
-TCP.prototype.writeAsciiString = function (req, data) {
-    this._writer.writeString(data);
-    req.oncomplete(0, this, req);
-};
-
-TCP.prototype.writeBuffer = function (req, data) {
-    this._writer.writeBytes(data);
-    req.oncomplete(0, this, req);
+TCP.prototype.setKeepAlive = function (enable, delay) {
+    this._clientSocket.control.keepAlive = enable;
 };
 
 TCP.prototype.shutdown = function (req) {
-    this._writer.close();
+    req.oncomplete(0, this, req);
 };
 
 module.exports.TCP = TCP;
